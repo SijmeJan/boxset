@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "BoxSet"
+version = "0.0.1"
+authors = [
+  { name="Sijme-Jan Paardekooper", email="s.paardekooper@tudelft.nl" },
+]
+description = "Finite Difference for Astrophysical Fluid dynamics"
+readme = "README.rst"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "MIT"
+license-files = ["LICENCSE"]
+dependencies = [
+  "numpy>=2.2.6",
+  "numba>=0.61.2",
+  "configparser>=7.2.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/SijmeJan/boxset"
+Issues = "https://github.com/SijmeJan/boxset/issues"
