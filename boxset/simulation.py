@@ -3,7 +3,7 @@ import numpy as np
 #import cProfile
 
 from .timeloop import timeloop
-from .coords import create_coordinates
+from .coords import create_coordinates, get_grid_dimensions
 from .output.basic import *
 
 def simulation(configuration_file, initial_conditions, boundary_conditions, restore_index=-1):
@@ -14,7 +14,8 @@ def simulation(configuration_file, initial_conditions, boundary_conditions, rest
     n_ghost = np.int32(config['Grid']['n_ghost'])
 
     # MPI domain composition
-
+    # dims = get_grid_dimensions(config)
+    # proc_dims = mpi4py.MPI.Compute_dims(nnodes, dims)
 
     # Spatial coordinate list
     coords = create_coordinates(config)
@@ -25,6 +26,7 @@ def simulation(configuration_file, initial_conditions, boundary_conditions, rest
     start_time = np.float64(config['Time']['start_time'])
     end_time = np.float64(config['Time']['end_time'])
     dump_dt = np.float64(config['Output']['dump_dt'])
+    cfl = np.float64(config['Time']['courant_number'])
 
     t = start_time
 
@@ -44,7 +46,7 @@ def simulation(configuration_file, initial_conditions, boundary_conditions, rest
             t_stop = end_time
 
         # Evolve until next dump
-        state = timeloop(state, coords, t, t_stop, 0.8, n_ghost, boundary_conditions)
+        state = timeloop(state, coords, t, t_stop, cfl, n_ghost, boundary_conditions)
         t = t_stop
 
         # Data dump
