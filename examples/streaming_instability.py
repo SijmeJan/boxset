@@ -28,7 +28,7 @@ def initial_conditions(coords):
     mu = 0.2
     stokes = 1.0
 
-    rng = np.random.default_rng()
+    rng = np.random.default_rng(seed=1)
 
     J0 = mu/(1 + stokes**2)
     J1 = stokes*J0
@@ -36,14 +36,16 @@ def initial_conditions(coords):
 
     U = np.zeros((n_eq, len(coords[0]), len(coords[1])))
     U[0,:,:] = 1.0
-    U[1,:,:] = 2*pressure_parameter*J1*denom + 0.01*rng.standard_normal(np.shape(U[1,:,:]))
-    U[2,:,:] = -pressure_parameter*(1 + J0)*denom + 0.01*rng.standard_normal(np.shape(U[1,:,:]))
-    U[3,:,:] = 0.01*rng.standard_normal(np.shape(U[1,:,:]))
+    U[1,:,:] = 2*pressure_parameter*J1*denom + \
+      rng.uniform(low=-0.005, high=0.005, size=np.shape(U[1,:,:]))
+    U[2,:,:] = -pressure_parameter*(1 + J0)*denom + \
+      rng.uniform(low=-0.005, high=0.005, size=np.shape(U[1,:,:]))
+    U[3,:,:] = rng.uniform(low=-0.005, high=0.005, size=np.shape(U[1,:,:]))
 
     U[4,:,:] = mu
-    U[5,:,:] = 2*pressure_parameter*(J1 - stokes*(1 + J0))*denom/(1 + stokes**2) + 0.01*rng.standard_normal(np.shape(U[1,:,:]))
-    U[6,:,:] = -pressure_parameter*(1 + J0 + stokes*J1)*denom/(1 + stokes**2)+ 0.01*rng.standard_normal(np.shape(U[1,:,:]))
-    U[7,:,:] = 0.01*rng.standard_normal(np.shape(U[1,:,:]))
+    U[5,:,:] = 2*pressure_parameter*(J1 - stokes*(1 + J0))*denom/(1 + stokes**2) + rng.uniform(low=-0.005, high=0.005, size=np.shape(U[1,:,:]))
+    U[6,:,:] = -pressure_parameter*(1 + J0 + stokes*J1)*denom/(1 + stokes**2)+ rng.uniform(low=-0.005, high=0.005, size=np.shape(U[1,:,:]))
+    U[7,:,:] = rng.uniform(low=-0.005, high=0.005, size=np.shape(U[1,:,:]))
 
     return U
 
@@ -67,7 +69,7 @@ def visualise(direc, save_index):
     x = coords[0]
     y = coords[1]
 
-    cf = plt.contourf(x[n_ghost:-n_ghost], y[n_ghost:-n_ghost], (np.transpose(U[4,n_ghost:-n_ghost,n_ghost:-n_ghost])),
+    cf = plt.contourf(x[n_ghost:-n_ghost], y[n_ghost:-n_ghost], (np.transpose(U[0,n_ghost:-n_ghost,n_ghost:-n_ghost])),
                      levels=100, cmap='terrain')
 
     plt.xlabel('x')
@@ -80,4 +82,4 @@ from boxset.simulation import simulation
 
 simulation("/Users/sjp/Desktop/boxset/streaming_instability.ini", initial_conditions, set_boundary, restore_index=-1)
 
-visualise('/Users/sjp/Desktop/boxset/', 70)
+visualise('/Users/sjp/Desktop/boxset/', 8)
