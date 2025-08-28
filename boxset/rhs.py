@@ -3,7 +3,7 @@ from numba import jit
 
 from .reconstruction.cweno_3rd import calc_interface_flux, weno_r
 from .conservation_laws.iso_2d_dust import *
-#from boundary_conditions.streaming_instability import set_boundary
+from .domain_decomposition import send_boundaries
 
 @jit
 def my_atleast_1d(x):
@@ -87,10 +87,10 @@ def add_to_rhs(rhs, U, coords, dim):
 
     # a[..,i] = maximum wave speed associated with interface i+1/2
     a = max_wave_speed(U, coords, dim)
-    for i in range(1, len(x)-1):
+    for i in range(0, len(x)-1):
         # Make sure these are arrays even for scalar states
         a0 = my_atleast_1d(a[...,i]).flatten()
-        a1 = my_atleast_1d(a[...,i-1]).flatten()
+        a1 = my_atleast_1d(a[...,i+1]).flatten()
 
         for j in range(0, len(a0)):
             if a0[j] > a1[j]: a1[j] = a0[j]
@@ -105,7 +105,7 @@ def add_to_rhs(rhs, U, coords, dim):
 
     return rhs
 
-def calculate_rhs(state, coords, n_ghost, boundary_conditions):
+def calculate_rhs(state, coords, n_ghost, boundary_conditions, cpu_grid):
     '''
     Calculate the right-hand side for the method of lines, based on state and coordinates.
     The state should have shape (n_eq, len(dim1), len(dim2), ...)
@@ -118,8 +118,10 @@ def calculate_rhs(state, coords, n_ghost, boundary_conditions):
     # Loop over all space dimensions
     for dim in range(0, len(coords)):
         # Set boundary conditions
-        #state = set_boundary(state, coords, dim, n_ghost)
         state = boundary_conditions(state, coords, dim, n_ghost)
+
+        # MPI: send/recv boundaries
+        state = send_boundaries(state, cpu_grid, dim, n_ghost)
 
         # Swap dimension so that state shape is (n_state, dim1, dim2, ..., dim)
         state = np.swapaxes(state, dim+1, len(coords))
