@@ -64,7 +64,7 @@ def initial_conditions(coords):
 
     return U
 
-from boxset.output.basic import *
+from boxset.output.parallel import *
 from boxset.coords import create_coordinates
 
 def visualise(direc, save_index):
@@ -76,12 +76,16 @@ def visualise(direc, save_index):
     config = configparser.ConfigParser()
     config.read(direc + 'windtunnel.ini')
 
-    n_ghost=4
-    t, U = restore_from_dump(save_index, config['Output']['direc'])
+    n_ghost = np.int32(config['Grid']['n_ghost'])
 
-    coords = create_coordinates(config)
+    coords, pos, global_dims = create_coordinates(config)
     x = coords[0]
     y = coords[1]
+
+    state = initial_conditions(coords)
+
+    t, U = restore_from_dump(state, save_index, config['Output']['direc'], pos, global_dims, n_ghost)
+
 
     cf = plt.contourf(x[n_ghost:-n_ghost], y[n_ghost:-n_ghost], np.log(np.transpose(np.abs(U[0,n_ghost:-n_ghost,n_ghost:-n_ghost]))),
                      levels=100, cmap='terrain')
