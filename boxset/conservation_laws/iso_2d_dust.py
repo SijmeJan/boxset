@@ -2,7 +2,7 @@ import numpy as np
 from numba import jit_module
 
 sound_speed = 1.0
-sound_speed_dust = 1.0e-10
+sound_speed_dust = 0.0
 stokes = 1.0
 pressure_parameter = 0.05
 
