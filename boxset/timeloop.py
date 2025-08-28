@@ -18,7 +18,7 @@ def timeloop(state, coords, start_time, end_time, courant_number, n_ghost, bound
         # MPI: calculate minimum time step
         dt_local = np.asarray([dt_local])
         dt = dt_local.copy()
-        MPI.COMM_WORLD.Allreduce([dt_local, MPI.FLOAT64_T], [dt, MPI.FLOAT64_T], op=MPI.MIN)
+        MPI.COMM_WORLD.Allreduce([dt_local, MPI.FLOAT], [dt, MPI.FLOAT], op=MPI.MIN)
         dt = dt[0]
 
         # End exactly on end_time
