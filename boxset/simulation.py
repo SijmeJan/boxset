@@ -9,8 +9,17 @@ from .output.parallel import *
 from .domain_decomposition import get_cpu_grid
 
 def simulation(configuration_file, initial_conditions, boundary_conditions, restore_index=-1):
-    '''Run simulation based on configuration file, and functions for setting initial and boundary conditions.'''
-    # Read from ini file
+    '''Run simulation based on configuration file, and functions for setting initial and boundary conditions.
+
+    Parameters:
+
+    configuration_file: name of INI file with grid size etc.
+    initial_conditions: function to set initial contitions. Must accept a singe argument, which is a list of coordinates. Should return a valid state.
+    boundary conditions: function to set boundary conditions.
+    restore_index: dump number to restore from. Defaults to -1, in which case a simulation will start from initial conditions.
+    '''
+
+    # Read from ini file. Rank 0 reads, then broadcasts to everyone.
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
 
@@ -61,6 +70,5 @@ def simulation(configuration_file, initial_conditions, boundary_conditions, rest
         save_dump(t, state, save_index, config['Output']['direc'], pos, global_dims, n_ghost)
         save_index = save_index + 1
 
-        print(t)
-
-        # Monitoring functions
+        if comm.Get_rank() == 0:
+            print('Dum at t = ', t)
