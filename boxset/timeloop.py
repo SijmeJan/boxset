@@ -1,7 +1,10 @@
+import numpy as np
+from mpi4py import MPI
+
 from .timesteppers.rk3 import time_stepper, rk_cfl
 from .rhs import calculate_rhs, calc_time_step
 
-def timeloop(state, coords, start_time, end_time, courant_number, n_ghost, boundary_conditions):
+def timeloop(state, coords, start_time, end_time, courant_number, n_ghost, boundary_conditions, cpu_grid):
     '''
     Evolve the state from start_time to end_time. Returns final state.
     '''
@@ -10,15 +13,23 @@ def timeloop(state, coords, start_time, end_time, courant_number, n_ghost, bound
     t = start_time
     while t < end_time:
         # Calculate maximum allowed time step
-        dt = courant_number*rk_cfl*calc_time_step(state, coords, n_ghost, boundary_conditions)/len(coords)
+        dt_local = courant_number*rk_cfl*calc_time_step(state, coords, n_ghost, boundary_conditions)/len(coords)
+
+        # MPI: calculate minimum time step
+        dt_local = np.asarray([dt_local])
+        dt = dt_local.copy()
+        MPI.COMM_WORLD.Allreduce([dt_local, MPI.FLOAT64_T], [dt, MPI.FLOAT64_T], op=MPI.MIN)
+        dt = dt[0]
+
         # End exactly on end_time
         if t + dt > end_time:
             dt = end_time - t
 
         # Do one time step
-        state = time_stepper(state, coords, dt, calculate_rhs, n_ghost, boundary_conditions)
+        state = time_stepper(state, coords, dt, calculate_rhs, n_ghost, boundary_conditions, cpu_grid)
 
-        print(t, dt)
+        if MPI.COMM_WORLD.Get_rank() == 0:
+            print(t, dt)
         t = t + dt
 
     return state
