@@ -1,24 +1,32 @@
 import configparser
 import numpy as np
 #import cProfile
+from mpi4py import MPI
 
 from .timeloop import timeloop
-from .coords import create_coordinates, get_grid_dimensions
-from .output.basic import *
+from .coords import create_coordinates
+from .output.parallel import *
+from .domain_decomposition import get_cpu_grid
 
 def simulation(configuration_file, initial_conditions, boundary_conditions, restore_index=-1):
+    '''Run simulation based on configuration file, and functions for setting initial and boundary conditions.'''
     # Read from ini file
-    config = configparser.ConfigParser()
-    config.read(configuration_file)
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+
+    config = []
+    if rank == 0:
+        config = configparser.ConfigParser()
+        config.read(configuration_file)
+    config = comm.bcast(config, root=0)
 
     n_ghost = np.int32(config['Grid']['n_ghost'])
 
-    # MPI domain composition
-    # dims = get_grid_dimensions(config)
-    # proc_dims = mpi4py.MPI.Compute_dims(nnodes, dims)
-
     # Spatial coordinate list
-    coords = create_coordinates(config)
+    coords, pos, global_dims = create_coordinates(config)
+
+    # CPU grid
+    cpu_grid, my_pos = get_cpu_grid(global_dims)
 
     # Set initial conditions
     state = initial_conditions(coords)
@@ -34,10 +42,10 @@ def simulation(configuration_file, initial_conditions, boundary_conditions, rest
 
     # Restore from dump if necessary
     if restore_index > -1:
-        t, state = restore_from_dump(restore_index, config['Output']['direc'])
+        t, state = restore_from_dump(state, restore_index, config['Output']['direc'], pos, global_dims, n_ghost)
     else:
         # First dump
-        save_dump(t, state, save_index, config['Output']['direc'])
+        save_dump(t, state, save_index, config['Output']['direc'], pos, global_dims, n_ghost)
         save_index = save_index + 1
 
     while t < end_time:
@@ -46,11 +54,11 @@ def simulation(configuration_file, initial_conditions, boundary_conditions, rest
             t_stop = end_time
 
         # Evolve until next dump
-        state = timeloop(state, coords, t, t_stop, cfl, n_ghost, boundary_conditions)
+        state = timeloop(state, coords, t, t_stop, cfl, n_ghost, boundary_conditions, cpu_grid)
         t = t_stop
 
         # Data dump
-        save_dump(t, state, save_index, config['Output']['direc'])
+        save_dump(t, state, save_index, config['Output']['direc'], pos, global_dims, n_ghost)
         save_index = save_index + 1
 
         print(t)
