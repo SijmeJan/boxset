@@ -85,12 +85,12 @@ def send_boundaries(state, cpu_grid, dim, n_ghost):
 
         # Create MPI datatypes for our subarrays
         pos_in_global_state[dim+1] = (direction == -1)*(np.shape(state)[dim+1] - n_ghost)
-        subarr_recv = MPI.FLOAT.Create_subarray(np.shape(state), sub_size, pos_in_global_state)
+        subarr_recv = MPI.DOUBLE.Create_subarray(np.shape(state), sub_size, pos_in_global_state)
         subarr_recv.Commit()
 
         pos_in_global_state[dim+1] = (direction == -1)*n_ghost + \
             (direction == 1)*(np.shape(state)[dim+1] - 2*n_ghost)
-        subarr_send = MPI.FLOAT.Create_subarray(np.shape(state), sub_size, pos_in_global_state)
+        subarr_send = MPI.DOUBLE.Create_subarray(np.shape(state), sub_size, pos_in_global_state)
         subarr_send.Commit()
 
         dest_pos = list(my_position_in_grid)
