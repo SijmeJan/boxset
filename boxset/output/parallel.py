@@ -20,7 +20,7 @@ def save_dump(time, state, save_index, save_path, pos, global_dims, n_ghost):
     pos_in_global_state.insert(0, 0)
 
     # Create MPI datatype for our subaray
-    subarr = MPI.FLOAT.Create_subarray(global_state_dims, np.shape(stripped_state), pos_in_global_state)
+    subarr = MPI.DOUBLE.Create_subarray(global_state_dims, np.shape(stripped_state), pos_in_global_state)
     subarr.Commit()
 
     # Open file and write everything
@@ -29,7 +29,7 @@ def save_dump(time, state, save_index, save_path, pos, global_dims, n_ghost):
     fh = MPI.File.Open(comm, save_path + 'dump{}.dat'.format(save_index), amode)
     if comm.Get_rank() == 0:
         fh.Write(np.asarray([time]))
-    displacement = MPI.FLOAT.Get_size()
+    displacement = MPI.DOUBLE.Get_size()
     fh.Set_view(displacement, filetype=subarr)
     fh.Write_all(stripped_state)
     subarr.Free()
@@ -55,7 +55,7 @@ def restore_from_dump(state, restore_index, restore_path, pos, global_dims, n_gh
     pos_in_global_state.insert(0, 0)
 
     # Create MPI datatype for our subaray
-    subarr = MPI.FLOAT.Create_subarray(global_state_dims, np.shape(stripped_state), pos_in_global_state)
+    subarr = MPI.DOUBLE.Create_subarray(global_state_dims, np.shape(stripped_state), pos_in_global_state)
     subarr.Commit()
 
     # Open file and read everything
@@ -65,7 +65,7 @@ def restore_from_dump(state, restore_index, restore_path, pos, global_dims, n_gh
     t = np.asarray([0.0])
     if comm.Get_rank() == 0:
         fh.Read(t)
-    displacement = MPI.FLOAT.Get_size()
+    displacement = MPI.DOUBLE.Get_size()
     fh.Set_view(displacement, filetype=subarr)
     fh.Read_all(stripped_state)
     subarr.Free()
