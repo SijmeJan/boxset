@@ -1,5 +1,6 @@
 import numpy as np
 from numba import jit_module
+from mpi4py import MPI
 
 def _set_boundary_x(state, x, n_ghost):
     # Periodic boundary conditions
@@ -32,7 +33,7 @@ def initial_conditions(coords):
     h = 0.5*noise_level
     l = -0.5*noise_level
 
-    rng = np.random.default_rng(seed=1)
+    rng = np.random.default_rng(seed=1+MPI.COMM_WORLD.Get_rank())
 
     J0 = mu/(1 + stokes**2)
     J1 = stokes*J0
@@ -92,5 +93,6 @@ def visualise(ini_file, save_index):
 from boxset.simulation import simulation
 
 #simulation("/Users/sjp/Desktop/boxset/streaming_instability.ini", initial_conditions, set_boundary, restore_index=-1)
+#simulation("/home/sijmejanpaarde/streaming_instability.ini", initial_conditions, set_boundary, restore_index=-1)
 
 visualise("/Users/sjp/Desktop/boxset/streaming_instability.ini", 100)
