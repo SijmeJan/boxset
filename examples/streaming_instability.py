@@ -56,14 +56,14 @@ def initial_conditions(coords):
 from boxset.output.parallel import *
 from boxset.coords import create_coordinates
 
-def visualise(direc, save_index):
+def visualise(ini_file, save_index):
     import matplotlib.pyplot as plt
     import matplotlib.patches as patches
     import configparser
 
 
     config = configparser.ConfigParser()
-    config.read(direc + 'streaming_instability.ini')
+    config.read(ini_file)
 
     n_ghost = np.int32(config['Grid']['n_ghost'])
 
@@ -79,7 +79,7 @@ def visualise(direc, save_index):
     #levels = np.linspace(np.log10(0.02), np.log10(2), 100)
 
     cf = plt.contourf(x[n_ghost:-n_ghost], y[n_ghost:-n_ghost],
-                      np.transpose((f)),
+                      np.transpose(np.log10(f)),
                       levels=100, cmap='plasma')
 
     plt.xlabel('x')
@@ -91,6 +91,6 @@ def visualise(direc, save_index):
 
 from boxset.simulation import simulation
 
-simulation("/Users/sjp/Desktop/boxset/streaming_instability.ini", initial_conditions, set_boundary, restore_index=-1)
+#simulation("/Users/sjp/Desktop/boxset/streaming_instability.ini", initial_conditions, set_boundary, restore_index=-1)
 
-visualise('/Users/sjp/Desktop/boxset/', 100)
+visualise("/Users/sjp/Desktop/boxset/streaming_instability.ini", 100)
