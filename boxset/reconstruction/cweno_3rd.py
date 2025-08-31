@@ -4,6 +4,15 @@ from numba import jit_module
 # Maximum order 2*r-1
 weno_r = 3
 
+# For CWENO, any symmetric combination will do.
+# Closer to [1/3,1/3,1/3] gives more stability (?) but less accuracy.
+
+#ideal_weights = np.asarray([1/6, 2/3, 1/6])
+ideal_weights = np.asarray([3/16, 5/8, 3/16])
+#ideal_weights = np.asarray([0.21, 0.58, 0.21])
+#ideal_weights = np.asarray([0.22, 0.56, 0.22])
+#ideal_weights = np.asarray([0.25, 0.5, 0.25])
+
 def interpolate_to_edge(U, X):
     '''
     Last dimension of U should have 5 elements. X is the evaluation point: X=3 for x_{i+1/2}.
@@ -50,9 +59,9 @@ def nonlinear_weights(U, epsilon):
     betaL, betaC, betaR = smoothness_coefficients(U)
 
     # JS-type weights
-    wL = 3/16/(epsilon + betaL)**2
-    wC = 5/8/(epsilon + betaC)**2
-    wR = 3/16/(epsilon + betaR)**2
+    wL = ideal_weights[0]/(epsilon + betaL)**2
+    wC = ideal_weights[1]/(epsilon + betaC)**2
+    wR = ideal_weights[2]/(epsilon + betaR)**2
 
     norm_fac = 1.0/(wL + wC + wR)
 
