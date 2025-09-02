@@ -67,14 +67,14 @@ def initial_conditions(coords):
 from boxset.output.parallel import *
 from boxset.coords import create_coordinates
 
-def visualise(direc, save_index):
+def visualise(ini_file, save_index):
     import matplotlib.pyplot as plt
     import matplotlib.patches as patches
     import configparser
 
 
     config = configparser.ConfigParser()
-    config.read(direc + 'windtunnel.ini')
+    config.read(ini_file)
 
     n_ghost = np.int32(config['Grid']['n_ghost'])
 
@@ -103,4 +103,4 @@ from boxset.simulation import simulation
 
 simulation("/Users/sjp/Desktop/boxset/windtunnel.ini", initial_conditions, set_boundary, restore_index=-1)
 
-visualise('/Users/sjp/Desktop/boxset/', 4)
+visualise("/Users/sjp/Desktop/boxset/windtunnel.ini", 4)
