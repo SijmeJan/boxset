@@ -1,7 +1,8 @@
 import numpy as np
 from numba import jit
+#from numba import jit_module
 
-from .reconstruction.cweno_3rd_compact import calc_interface_flux, weno_r
+from .reconstruction.cweno_3rd import calc_interface_flux, weno_r
 from .conservation_laws.iso_2d_dust import *
 from .domain_decomposition import send_boundaries
 
@@ -24,7 +25,6 @@ def calc_time_step(state, coords, n_ghost, boundary_conditions):
     dt = 1.0e10
 
     for i in range(0, len(coords)):
-        #set_boundary(state, coords, i, n_ghost)
         state = boundary_conditions(state, coords, i, n_ghost)
 
     # Loop over all space dimensions
@@ -50,17 +50,19 @@ def split_flux(state, a, flux):
 @jit
 def total_interface_flux(Fplus, Fmin):
     '''Add positive and negative contributions of the flux.'''
-    return 0.5*(calc_interface_flux(Fplus, weno_r, epsilon=1.0e-6) +
-                calc_interface_flux(Fmin, weno_r-1, epsilon=1.0e-6))
+
+    return 0.5*(calc_interface_flux(Fplus, weno_r, epsilon=1.0e-12) +
+                calc_interface_flux(Fmin, weno_r-1, epsilon=1.0e-12)), 0.5*(Fplus[..., weno_r-1] + Fmin[..., weno_r-1])
 
 @jit
-def calculate_interface_flux(U, centre_flux, a, dim, x):
+def calculate_interface_flux(U, centre_flux, a, dim):
     '''Calculate interface fluxes in one particular direction.
     This is where the bulk of the computational time is spent, usually.
     '''
     interface_flux = np.empty_like(U)
+    interface_flux_safe = np.empty_like(U)
 
-    for i in range(weno_r-1, len(x)-weno_r):
+    for i in range(weno_r-1, np.shape(U)[-1]-weno_r):
         # Calculate flux splitting: U and centre_flux provide full stencil
         Fplus = split_flux(U[...,i-weno_r+1:i+weno_r], a[...,i], centre_flux[...,i-weno_r+1:i+weno_r])
         Fmin  = split_flux(U[...,i-weno_r+2:i+weno_r+1], -a[...,i], centre_flux[...,i-weno_r+2:i+weno_r+1])
@@ -71,15 +73,16 @@ def calculate_interface_flux(U, centre_flux, a, dim, x):
             Fmin[...,j]  = multiply_with_left_eigenvectors(U[...,i], Fmin[...,j], dim)
 
         # Add positive and negative portions, so that interface_flux[i] = flux_i+1/2
-        interface_flux[...,i] = total_interface_flux(Fplus, Fmin)
+        interface_flux[...,i], interface_flux_safe[...,i] = total_interface_flux(Fplus, Fmin)
 
         # Multiply with right eigenvectors of cell i+2 (only for systems)
         interface_flux[...,i] = multiply_with_right_eigenvectors(U[...,i], interface_flux[...,i], dim)
+        interface_flux_safe[...,i] = multiply_with_right_eigenvectors(U[...,i], interface_flux_safe[...,i], dim)
 
-    return interface_flux
+    return interface_flux, interface_flux_safe
 
 @jit
-def add_to_rhs(rhs, U, coords, dim):
+def add_to_rhs(rhs, U, coords, dim, dt):
     x = coords[dim]
 
     # Calculate fluxes at cell centres. Force a copy of U in case the flux_from_state function returns a view.
@@ -87,7 +90,7 @@ def add_to_rhs(rhs, U, coords, dim):
 
     # a[..,i] = maximum wave speed associated with interface i+1/2
     a = max_wave_speed(U, coords, dim)
-    for i in range(0, len(x)-1):
+    for i in range(0, np.shape(U)[-1]-1):
         # Make sure these are arrays even for scalar states
         a0 = my_atleast_1d(a[...,i]).flatten()
         a1 = my_atleast_1d(a[...,i+1]).flatten()
@@ -97,15 +100,41 @@ def add_to_rhs(rhs, U, coords, dim):
 
         a[...,i] = np.reshape(a1, np.shape(a[...,i]))
 
-    interface_flux = calculate_interface_flux(U, centre_flux, a, dim, x)
+    interface_flux, interface_flux_safe = calculate_interface_flux(U, centre_flux, a, dim)
+
+
+    # Check if rhs takes it outside allowed range? Specified in conservation law?
+
+    for i in range(1, np.shape(U)[-1]):
+        # Check if U + dt*rhs is allowed
+        R = allowed_state(U[...,i] - (interface_flux[...,i] - interface_flux[...,i-1])/(x[1]-x[0]))
+
+        # If state not allowed, replace by first order flux
+        interface_flux[...,i] = np.where(R, interface_flux[...,i], interface_flux_safe[...,i])
+        interface_flux[...,i-1] = np.where(R, interface_flux[...,i-1], interface_flux_safe[...,i-1])
+
+    # check if | interface_flux[...,i] - interface_flux[...,i-1]| is too large
+    # where it is too large, replace with interface_flux_safe
+    #delta = 0.1
+
+    #reference_state = np.max(U[...,:])
+    #for j in range(1, len(coords)):
+    #    reference_state = np.max(U[...,:])
+
+    #for i in range(1, np.shape(U)[-1]):
+    #    R = np.abs(interface_flux[...,i] - interface_flux[...,i-1])/(np.abs(U[...,i]) + reference_state) < delta*(x[1]-x[0])/dt
+    #
+    #    interface_flux[...,i] = np.where(R, interface_flux[...,i], interface_flux_safe[...,i])
+    #    interface_flux[...,i-1] = np.where(R, interface_flux[...,i-1], interface_flux_safe[...,i-1])
+
 
     # Add flux difference to rhs
-    for i in range(1, len(x)):
+    for i in range(1, np.shape(U)[-1]):
         rhs[...,i] = rhs[...,i] - (interface_flux[...,i] - interface_flux[...,i-1])/(x[1]-x[0])
 
     return rhs
 
-def calculate_rhs(state, coords, n_ghost, boundary_conditions, cpu_grid):
+def calculate_rhs(state, coords, n_ghost, boundary_conditions, cpu_grid, dt):
     '''
     Calculate the right-hand side for the method of lines, based on state and coordinates.
     The state should have shape (n_eq, len(dim1), len(dim2), ...)
@@ -128,7 +157,7 @@ def calculate_rhs(state, coords, n_ghost, boundary_conditions, cpu_grid):
         rhs = np.swapaxes(rhs, dim+1, len(coords))
 
         # Add contribution from this dimesnsion to rhs
-        rhs = add_to_rhs(rhs, state, coords, dim)
+        rhs = add_to_rhs(rhs, state, coords, dim, dt)
 
         # Swap back to original shape
         state = np.swapaxes(state, dim+1, len(coords))
