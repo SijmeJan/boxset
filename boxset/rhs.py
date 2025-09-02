@@ -82,7 +82,7 @@ def calculate_interface_flux(U, centre_flux, a, dim):
     return interface_flux, interface_flux_safe
 
 @jit
-def add_to_rhs(rhs, U, coords, dim, dt):
+def add_to_rhs(rhs, U, coords, dim):
     x = coords[dim]
 
     # Calculate fluxes at cell centres. Force a copy of U in case the flux_from_state function returns a view.
@@ -113,28 +113,13 @@ def add_to_rhs(rhs, U, coords, dim, dt):
         interface_flux[...,i] = np.where(R, interface_flux[...,i], interface_flux_safe[...,i])
         interface_flux[...,i-1] = np.where(R, interface_flux[...,i-1], interface_flux_safe[...,i-1])
 
-    # check if | interface_flux[...,i] - interface_flux[...,i-1]| is too large
-    # where it is too large, replace with interface_flux_safe
-    #delta = 0.1
-
-    #reference_state = np.max(U[...,:])
-    #for j in range(1, len(coords)):
-    #    reference_state = np.max(U[...,:])
-
-    #for i in range(1, np.shape(U)[-1]):
-    #    R = np.abs(interface_flux[...,i] - interface_flux[...,i-1])/(np.abs(U[...,i]) + reference_state) < delta*(x[1]-x[0])/dt
-    #
-    #    interface_flux[...,i] = np.where(R, interface_flux[...,i], interface_flux_safe[...,i])
-    #    interface_flux[...,i-1] = np.where(R, interface_flux[...,i-1], interface_flux_safe[...,i-1])
-
-
     # Add flux difference to rhs
     for i in range(1, np.shape(U)[-1]):
         rhs[...,i] = rhs[...,i] - (interface_flux[...,i] - interface_flux[...,i-1])/(x[1]-x[0])
 
     return rhs
 
-def calculate_rhs(state, coords, n_ghost, boundary_conditions, cpu_grid, dt):
+def calculate_rhs(state, coords, n_ghost, boundary_conditions, cpu_grid):
     '''
     Calculate the right-hand side for the method of lines, based on state and coordinates.
     The state should have shape (n_eq, len(dim1), len(dim2), ...)
@@ -157,7 +142,7 @@ def calculate_rhs(state, coords, n_ghost, boundary_conditions, cpu_grid, dt):
         rhs = np.swapaxes(rhs, dim+1, len(coords))
 
         # Add contribution from this dimesnsion to rhs
-        rhs = add_to_rhs(rhs, state, coords, dim, dt)
+        rhs = add_to_rhs(rhs, state, coords, dim)
 
         # Swap back to original shape
         state = np.swapaxes(state, dim+1, len(coords))
