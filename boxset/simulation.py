@@ -71,4 +71,4 @@ def simulation(configuration_file, initial_conditions, boundary_conditions, rest
         save_index = save_index + 1
 
         if comm.Get_rank() == 0:
-            print('Dum at t = ', t)
+            print('Dump at t = ', t)
