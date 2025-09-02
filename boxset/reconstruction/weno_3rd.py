@@ -45,8 +45,8 @@ def nonlinear_weights(U, epsilon):
     wR = wR*((epsilon + betaR)**2 + tau**2)
 
     # Alternative (better near critical points)
-    wL = (1 + tau/(betaL + epsilon)**(0.75))/3
-    wR = 2*(1 + tau/(betaR + epsilon)**(0.75))/3
+    #wL = (1 + tau/(betaL + epsilon)**(0.75))/3
+    #wR = 2*(1 + tau/(betaR + epsilon)**(0.75))/3
 
     norm_fac = 1.0/(wL + wR)
 
