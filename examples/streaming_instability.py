@@ -77,7 +77,7 @@ def visualise(ini_file, save_index):
     t, U = restore_from_dump(state, save_index, config['Output']['direc'], pos, global_dims, n_ghost)
 
     f = U[4,n_ghost:-n_ghost,n_ghost:-n_ghost]
-    #levels = np.linspace(np.log10(0.02), np.log10(2), 100)
+    levels = np.linspace(np.log10(0.02), np.log10(2), 100)
 
     cf = plt.contourf(x[n_ghost:-n_ghost], y[n_ghost:-n_ghost],
                       np.transpose(np.log10(f)),
@@ -92,7 +92,7 @@ def visualise(ini_file, save_index):
 
 from boxset.simulation import simulation
 
-#simulation("/Users/sjp/Desktop/boxset/streaming_instability.ini", initial_conditions, set_boundary, restore_index=1)
+simulation("/Users/sjp/Desktop/boxset/streaming_instability.ini", initial_conditions, set_boundary, restore_index=-1)
 #simulation("/home/sijmejanpaarde/streaming_instability.ini", initial_conditions, set_boundary, restore_index=-1)
 
-visualise("/Users/sjp/Desktop/boxset/streaming_instability.ini", 10)
+visualise("/Users/sjp/Desktop/boxset/streaming_instability.ini", 100)
