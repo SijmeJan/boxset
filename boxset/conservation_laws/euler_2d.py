@@ -165,4 +165,7 @@ def max_wave_speed(U , coords, dim):
 def source_func(U, coords):
     return 0.0*U
 
+def allowed_state(state):
+    return (state[0] > 0.0)
+
 jit_module(nopython=True, error_model="numpy")
