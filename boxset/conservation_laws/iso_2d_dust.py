@@ -295,4 +295,7 @@ def source_func(U, coords):
 
     return ret
 
+def allowed_state(state):
+    return np.logical_and(state[0] > 0.0, state[4] > 0.0)
+
 jit_module(nopython=True, error_model="numpy")
