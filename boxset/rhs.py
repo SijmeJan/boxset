@@ -1,7 +1,7 @@
 import numpy as np
 from numba import jit
 
-from .reconstruction.cweno_3rd import calc_interface_flux, weno_r
+from .reconstruction.cweno_3rd_compact import calc_interface_flux, weno_r
 from .conservation_laws.iso_2d_dust import *
 from .domain_decomposition import send_boundaries
 
@@ -50,8 +50,8 @@ def split_flux(state, a, flux):
 @jit
 def total_interface_flux(Fplus, Fmin):
     '''Add positive and negative contributions of the flux.'''
-    return 0.5*(calc_interface_flux(Fplus, weno_r, epsilon=1.0e-12) +
-                calc_interface_flux(Fmin, weno_r-1, epsilon=1.0e-12))
+    return 0.5*(calc_interface_flux(Fplus, weno_r, epsilon=1.0e-6) +
+                calc_interface_flux(Fmin, weno_r-1, epsilon=1.0e-6))
 
 @jit
 def calculate_interface_flux(U, centre_flux, a, dim, x):
