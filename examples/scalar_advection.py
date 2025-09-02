@@ -28,12 +28,12 @@ def initial_conditions(coords):
 from boxset.output.parallel import *
 from boxset.coords import create_coordinates
 
-def visualise(direc, save_index):
+def visualise(ini_file, save_index):
     import matplotlib.pyplot as plt
     import configparser
 
     config = configparser.ConfigParser()
-    config.read(direc + 'scalar_advection.ini')
+    config.read(ini_file)
 
     n_ghost = np.int32(config['Grid']['n_ghost'])
 
@@ -60,6 +60,6 @@ def visualise(direc, save_index):
 
 from boxset.simulation import simulation
 
-#simulation("/Users/sjp/Desktop/boxset/scalar_advection.ini", initial_conditions, set_boundary, restore_index=-1)
+simulation("/Users/sjp/Desktop/boxset/scalar_advection.ini", initial_conditions, set_boundary, restore_index=-1)
 
-visualise('/Users/sjp/Desktop/boxset/', 1)
+visualise("/Users/sjp/Desktop/boxset/scalar_advection.ini", 1)
