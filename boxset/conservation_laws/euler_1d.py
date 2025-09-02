@@ -97,4 +97,7 @@ claw_funcs = {
     'source_func' : source_func
 }
 
+def allowed_state(state):
+    return (state[0] > 0.0)
+
 jit_module(nopython=True, error_model="numpy")
