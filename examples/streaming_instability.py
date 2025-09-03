@@ -52,6 +52,8 @@ def initial_conditions(coords):
     U[6,:,:] = -pressure_parameter*(1 + J0 + stokes*J1)*denom/(1 + stokes**2)+ rng.uniform(low=l, high=h, size=np.shape(U[1,:,:]))
     U[7,:,:] = rng.uniform(low=l, high=h, size=np.shape(U[1,:,:]))
 
+    #U[4,10,10] = -1.0
+
     return U
 
 from boxset.output.parallel import *
@@ -81,7 +83,7 @@ def visualise(ini_file, save_index):
 
     cf = plt.contourf(x[n_ghost:-n_ghost], y[n_ghost:-n_ghost],
                       np.transpose(np.log10(f)),
-                      levels=100, cmap='plasma')
+                      levels=levels, cmap='plasma')
 
     plt.xlabel('x')
     plt.ylabel('z')
