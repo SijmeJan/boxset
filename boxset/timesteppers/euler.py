@@ -4,4 +4,4 @@ def time_stepper(U, coords, dt, rhs, n_ghost, boundary_conditions, cpu_grid):
     '''
     Euler time step
     '''
-    return U + dt*rhs(U, coords, n_ghost, boundary_conditions, cpu_grid)
+    return U + dt*rhs(U, coords, n_ghost, boundary_conditions, cpu_grid, dt)
