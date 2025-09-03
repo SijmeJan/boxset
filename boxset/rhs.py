@@ -82,7 +82,7 @@ def calculate_interface_flux(U, centre_flux, a, dim):
     return interface_flux, interface_flux_safe
 
 @jit
-def add_to_rhs(rhs, U, coords, dim):
+def add_to_rhs(rhs, U, coords, dim, n_ghost, dt):
     x = coords[dim]
 
     # Calculate fluxes at cell centres. Force a copy of U in case the flux_from_state function returns a view.
@@ -105,9 +105,10 @@ def add_to_rhs(rhs, U, coords, dim):
 
     # Check if rhs takes it outside allowed range? Specified in conservation law?
 
-    for i in range(1, np.shape(U)[-1]):
-        # Check if U + dt*rhs is allowed
-        R = allowed_state(U[...,i] - (interface_flux[...,i] - interface_flux[...,i-1])/(x[1]-x[0]))
+    #for i in range(1, np.shape(U)[-1]):
+    for i in range(n_ghost, np.shape(U)[-1]-n_ghost):
+        # Check if U + 2*dt*rhs is allowed (factor 2 for safety)
+        R = allowed_state(U[...,i] - 2*dt*(interface_flux[...,i] - interface_flux[...,i-1])/(x[1]-x[0]))
 
         # If state not allowed, replace by first order flux
         interface_flux[...,i] = np.where(R, interface_flux[...,i], interface_flux_safe[...,i])
@@ -119,7 +120,7 @@ def add_to_rhs(rhs, U, coords, dim):
 
     return rhs
 
-def calculate_rhs(state, coords, n_ghost, boundary_conditions, cpu_grid):
+def calculate_rhs(state, coords, n_ghost, boundary_conditions, cpu_grid, dt):
     '''
     Calculate the right-hand side for the method of lines, based on state and coordinates.
     The state should have shape (n_eq, len(dim1), len(dim2), ...)
@@ -142,7 +143,7 @@ def calculate_rhs(state, coords, n_ghost, boundary_conditions, cpu_grid):
         rhs = np.swapaxes(rhs, dim+1, len(coords))
 
         # Add contribution from this dimesnsion to rhs
-        rhs = add_to_rhs(rhs, state, coords, dim)
+        rhs = add_to_rhs(rhs, state, coords, dim, n_ghost, dt)
 
         # Swap back to original shape
         state = np.swapaxes(state, dim+1, len(coords))
