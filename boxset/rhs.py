@@ -1,9 +1,8 @@
 import numpy as np
 from numba import jit
-#from numba import jit_module
 
-from .reconstruction.cweno_3rd import calc_interface_flux, weno_r
-from .conservation_laws.iso_2d_dust import *
+from .reconstruction.weno_ao_53 import calc_interface_flux, weno_r
+from .conservation_laws.isothermal_euler_2d import *
 from .domain_decomposition import send_boundaries
 
 @jit
@@ -82,7 +81,7 @@ def calculate_interface_flux(U, centre_flux, a, dim):
     return interface_flux, interface_flux_safe
 
 @jit
-def add_to_rhs(rhs, U, coords, dim, n_ghost, dt):
+def add_to_rhs(rhs, U, coords, dim, n_ghost, dt_safe):
     x = coords[dim]
 
     # Calculate fluxes at cell centres. Force a copy of U in case the flux_from_state function returns a view.
@@ -105,10 +104,9 @@ def add_to_rhs(rhs, U, coords, dim, n_ghost, dt):
 
     # Check if rhs takes it outside allowed range? Specified in conservation law?
 
-    #for i in range(1, np.shape(U)[-1]):
     for i in range(n_ghost, np.shape(U)[-1]-n_ghost):
-        # Check if U + 2*dt*rhs is allowed (factor 2 for safety)
-        R = allowed_state(U[...,i] - 2*dt*(interface_flux[...,i] - interface_flux[...,i-1])/(x[1]-x[0]))
+        # Check if U + dt_safe*rhs is allowed (factor 2 for safety)
+        R = allowed_state(U[...,i] - dt_safe*(interface_flux[...,i] - interface_flux[...,i-1])/(x[1]-x[0]))
 
         # If state not allowed, replace by first order flux
         interface_flux[...,i] = np.where(R, interface_flux[...,i], interface_flux_safe[...,i])
@@ -142,7 +140,7 @@ def calculate_rhs(state, coords, n_ghost, boundary_conditions, cpu_grid, dt):
         state = np.swapaxes(state, dim+1, len(coords))
         rhs = np.swapaxes(rhs, dim+1, len(coords))
 
-        # Add contribution from this dimesnsion to rhs
+        # Add contribution from this dimension to rhs
         rhs = add_to_rhs(rhs, state, coords, dim, n_ghost, dt)
 
         # Swap back to original shape
