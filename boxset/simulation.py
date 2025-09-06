@@ -44,6 +44,7 @@ def simulation(configuration_file, initial_conditions, boundary_conditions, rest
     end_time = np.float64(config['Time']['end_time'])
     dump_dt = np.float64(config['Output']['dump_dt'])
     cfl = np.float64(config['Time']['courant_number'])
+    safety_factor = np.float64(config['Time']['safety_factor'])
 
     t = start_time
 
@@ -63,7 +64,7 @@ def simulation(configuration_file, initial_conditions, boundary_conditions, rest
             t_stop = end_time
 
         # Evolve until next dump
-        state = timeloop(state, coords, t, t_stop, cfl, n_ghost, boundary_conditions, cpu_grid)
+        state = timeloop(state, coords, t, t_stop, cfl, n_ghost, boundary_conditions, cpu_grid, safety_factor)
         t = t_stop
 
         # Data dump
