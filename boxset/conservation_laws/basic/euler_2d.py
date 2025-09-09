@@ -166,6 +166,9 @@ def source_func(U, coords):
     return 0.0*U
 
 def allowed_state(state):
-    return (state[0] > 0.0)
+    prim = _primitive_variables(state)
+
+    # Want density and pressure positive
+    return np.logical_and(prim[0] > 0.0, prim[3] > 0.0)
 
 jit_module(nopython=True, error_model="numpy")

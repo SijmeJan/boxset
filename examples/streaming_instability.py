@@ -83,7 +83,7 @@ def visualise(ini_file, save_index):
 
     cf = plt.contourf(x[n_ghost:-n_ghost], y[n_ghost:-n_ghost],
                       np.transpose(np.log10(f)),
-                      levels=levels, cmap='plasma')
+                      levels=100, cmap='plasma')
 
     plt.xlabel('x')
     plt.ylabel('z')
@@ -97,4 +97,4 @@ from boxset.simulation import simulation
 simulation("/Users/sjp/Desktop/boxset/streaming_instability.ini", initial_conditions, set_boundary, restore_index=-1)
 #simulation("/home/sijmejanpaarde/streaming_instability.ini", initial_conditions, set_boundary, restore_index=-1)
 
-visualise("/Users/sjp/Desktop/boxset/streaming_instability.ini", 100)
+#visualise("/Users/sjp/Desktop/boxset/streaming_instability.ini", 20)

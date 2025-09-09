@@ -5,3 +5,4 @@ boxset/output/__pycache__/
 boxset/reconstruction/__pycache__/
 boxset/timesteppers/__pycache__/
 examples/__pycache__/
+.numba_config.yaml

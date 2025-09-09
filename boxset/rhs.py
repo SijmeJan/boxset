@@ -2,7 +2,7 @@ import numpy as np
 from numba import jit
 
 from .reconstruction.weno_ao_53 import calc_interface_flux, weno_r
-from .conservation_laws.isothermal_euler_2d import *
+from .conservation_laws.vsi_globalz import *
 from .domain_decomposition import send_boundaries
 
 @jit

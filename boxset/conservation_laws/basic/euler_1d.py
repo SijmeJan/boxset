@@ -22,7 +22,6 @@ def _flux_from_state_x(state_vector):
     return flx
 
 def _multiply_with_left_eigenvectors_x(primitive_variables, state_vector):
-    #prim = primitive_variables
     prim = _primitive_variables(primitive_variables)
 
     # Sound speed
@@ -49,7 +48,6 @@ def _multiply_with_left_eigenvectors_x(primitive_variables, state_vector):
     return ret
 
 def _multiply_with_right_eigenvectors_x(primitive_variables, state_vector):
-    #prim = primitive_variables
     prim = _primitive_variables(primitive_variables)
 
     ekin = 0.5*prim[1]**2
@@ -86,6 +84,9 @@ def source_func(U, coords):
     return 0.0*U
 
 def allowed_state(state):
-    return (state[0] < 0.0)
+    prim = _primitive_variables(state)
+
+    # Want density and pressure positive
+    return np.logical_and(prim[0] > 0.0, prim[2] > 0.0)
 
 jit_module(nopython=True, error_model="numpy")
