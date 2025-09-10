@@ -31,7 +31,7 @@ def initial_conditions(coords):
 
     return U
 
-from boxset.output.basic import *
+from boxset.output.parallel import *
 from boxset.coords import create_coordinates
 
 def visualise(direc, save_index):
@@ -42,11 +42,15 @@ def visualise(direc, save_index):
     config.read(direc + 'dust_boltz.ini')
 
     n_ghost = np.int32(config['Grid']['n_ghost'])
-    t, U = restore_from_dump(save_index, config['Output']['direc'])
 
-    coords = create_coordinates(config)
+    coords, pos, global_dims = create_coordinates(config)
     x = coords[0]
     y = coords[1]
+
+    state = initial_conditions(coords)
+
+    t, U = restore_from_dump(state, save_index, config['Output']['direc'], pos, global_dims, n_ghost)
+
 
     f, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True)
 
@@ -58,15 +62,16 @@ def visualise(direc, save_index):
     #plt.colorbar(cf, ax=ax1)
 
     dens = np.sum(U[0,n_ghost:-n_ghost,n_ghost:-n_ghost], axis=1)
-    vel = np.sum(U[0,n_ghost:-n_ghost,n_ghost:-n_ghost]*y[n_ghost:-n_ghost], axis=1)/dens
+    momx = np.sum(U[0,n_ghost:-n_ghost,n_ghost:-n_ghost]*y[n_ghost:-n_ghost], axis=1)
 
     ax2.plot(x[n_ghost:-n_ghost], dens)
-    ax3.plot(x[n_ghost:-n_ghost], vel)
+    ax3.plot(x[n_ghost:-n_ghost], momx)
+
 
     plt.show()
 
 from boxset.simulation import simulation
 
-simulation("/Users/sjp/Desktop/boxset/dust_boltz.ini", initial_conditions, set_boundary, restore_index=-1)
+#simulation("/Users/sjp/Desktop/boxset/dust_boltz.ini", initial_conditions, set_boundary, restore_index=-1)
 
-visualise('/Users/sjp/Desktop/boxset/', 100)
+visualise('/Users/sjp/Desktop/boxset/', 8)

@@ -3,15 +3,20 @@ from numba import jit_module
 
 gamma = 1.4
 
+
 def _primitive_variables(conserved_variables):
     prim = np.zeros_like(conserved_variables)
     prim[0] = conserved_variables[0]
     prim[1] = conserved_variables[1]/prim[0]
     prim[2] = conserved_variables[2]/prim[0]
     prim[3] = conserved_variables[3]/prim[0]
-    prim[4] = (gamma - 1.0)*(conserved_variables[4] - 0.5*(conserved_variables[1]**2 + conserved_variables[2]**2 + conserved_variables[3]**2)/prim[0])
+    prim[4] = (gamma - 1.0)*(conserved_variables[4] -
+                             0.5*(conserved_variables[1]**2 +
+                                  conserved_variables[2]**2 +
+                                  conserved_variables[3]**2)/prim[0])
 
     return prim
+
 
 def _flux_from_state_x(state_vector):
     prim = _primitive_variables(state_vector)
@@ -25,6 +30,7 @@ def _flux_from_state_x(state_vector):
 
     return flx
 
+
 def _flux_from_state_y(state_vector):
     prim = _primitive_variables(state_vector)
 
@@ -37,6 +43,7 @@ def _flux_from_state_y(state_vector):
 
     return flx
 
+
 def _flux_from_state_z(state_vector):
     prim = _primitive_variables(state_vector)
 
@@ -44,13 +51,15 @@ def _flux_from_state_z(state_vector):
     flx[0] = state_vector[3]
     flx[1] = state_vector[3]*prim[1]
     flx[2] = state_vector[3]*prim[2]
-    flx[3] = state_vector[3]*prim[3]+ prim[4]
+    flx[3] = state_vector[3]*prim[3] + prim[4]
     flx[4] = (state_vector[4] + prim[4])*prim[3]
 
     return flx
 
+
 def _multiply_with_left_eigenvectors_x(primitive_variables, state_vector):
-    '''Multiply state_vector with left eigenvectors based on primitive_variables'''
+    '''Multiply state_vector with left eigenvectors
+    based on primitive_variables'''
     prim = _primitive_variables(primitive_variables)
 
     # Sound speed
@@ -84,8 +93,10 @@ def _multiply_with_left_eigenvectors_x(primitive_variables, state_vector):
 
     return ret
 
+
 def _multiply_with_left_eigenvectors_y(primitive_variables, state_vector):
-    '''Multiply state_vector with left eigenvectors based on primitive_variables'''
+    '''Multiply state_vector with left eigenvectors
+    based on primitive_variables'''
     prim = _primitive_variables(primitive_variables)
 
     # Sound speed
@@ -119,8 +130,10 @@ def _multiply_with_left_eigenvectors_y(primitive_variables, state_vector):
 
     return ret
 
+
 def _multiply_with_left_eigenvectors_z(primitive_variables, state_vector):
-    '''Multiply state_vector with left eigenvectors based on primitive_variables'''
+    '''Multiply state_vector with left eigenvectors
+    based on primitive_variables'''
     prim = _primitive_variables(primitive_variables)
 
     # Sound speed
@@ -154,8 +167,10 @@ def _multiply_with_left_eigenvectors_z(primitive_variables, state_vector):
 
     return ret
 
+
 def _multiply_with_right_eigenvectors_x(primitive_variables, state_vector):
-    '''Multiply state_vector with right eigenvectors based on primitive_variables'''
+    '''Multiply state_vector with right eigenvectors
+    based on primitive_variables'''
     prim = _primitive_variables(primitive_variables)
 
     ekin = 0.5*(prim[1]**2 + prim[2]**2 + prim[3]**2)
@@ -167,15 +182,21 @@ def _multiply_with_right_eigenvectors_x(primitive_variables, state_vector):
     ret = np.zeros_like(state_vector)
 
     ret[0] = state_vector[0] + state_vector[1] + state_vector[4]
-    ret[1] = (prim[1] - c)*state_vector[0] + prim[1]*state_vector[1] + (prim[1] + c)*state_vector[4]
+    ret[1] = (prim[1] - c)*state_vector[0] + \
+        prim[1]*state_vector[1] + \
+        (prim[1] + c)*state_vector[4]
     ret[2] = prim[2]*ret[0] + state_vector[2]
     ret[3] = prim[3]*ret[0] + state_vector[3]
-    ret[4] = (h - c*prim[1])*state_vector[0] + ekin*state_vector[1] + prim[2]*state_vector[2] + prim[3]*state_vector[3] + (h + c*prim[1])*state_vector[4]
+    ret[4] = (h - c*prim[1])*state_vector[0] + ekin*state_vector[1] + \
+        prim[2]*state_vector[2] + prim[3]*state_vector[3] + \
+        (h + c*prim[1])*state_vector[4]
 
     return ret
 
+
 def _multiply_with_right_eigenvectors_y(primitive_variables, state_vector):
-    '''Multiply state_vector with right eigenvectors based on primitive_variables'''
+    '''Multiply state_vector with right eigenvectors
+    based on primitive_variables'''
     prim = _primitive_variables(primitive_variables)
 
     ekin = 0.5*(prim[1]**2 + prim[2]**2 + prim[3]**2)
@@ -188,14 +209,19 @@ def _multiply_with_right_eigenvectors_y(primitive_variables, state_vector):
 
     ret[0] = state_vector[0] + state_vector[2] + state_vector[4]
     ret[1] = prim[1]*ret[0] + state_vector[1]
-    ret[2] = (prim[2] - c)*state_vector[0] + prim[2]*state_vector[2] + (prim[2] + c)*state_vector[4]
+    ret[2] = (prim[2] - c)*state_vector[0] + prim[2]*state_vector[2] + \
+        (prim[2] + c)*state_vector[4]
     ret[3] = prim[3]*ret[0] + state_vector[3]
-    ret[4] = (h - c*prim[2])*state_vector[0] + ekin*state_vector[2] + prim[1]*state_vector[1] + prim[3]*state_vector[3] + (h + c*prim[2])*state_vector[4]
+    ret[4] = (h - c*prim[2])*state_vector[0] + ekin*state_vector[2] + \
+        prim[1]*state_vector[1] + prim[3]*state_vector[3] + \
+        (h + c*prim[2])*state_vector[4]
 
     return ret
 
+
 def _multiply_with_right_eigenvectors_z(primitive_variables, state_vector):
-    '''Multiply state_vector with right eigenvectors based on primitive_variables'''
+    '''Multiply state_vector with right eigenvectors
+    based on primitive_variables'''
     prim = _primitive_variables(primitive_variables)
 
     ekin = 0.5*(prim[1]**2 + prim[2]**2 + prim[3]**2)
@@ -209,22 +235,29 @@ def _multiply_with_right_eigenvectors_z(primitive_variables, state_vector):
     ret[0] = state_vector[0] + state_vector[3] + state_vector[4]
     ret[1] = prim[1]*ret[0] + state_vector[1]
     ret[2] = prim[2]*ret[0] + state_vector[2]
-    ret[3] = (prim[3] - c)*state_vector[0] + prim[3]*state_vector[3] + (prim[3] + c)*state_vector[4]
-    ret[4] = (h - c*prim[3])*state_vector[0] + ekin*state_vector[3] + prim[1]*state_vector[1] + prim[2]*state_vector[2] + (h + c*prim[3])*state_vector[4]
+    ret[3] = (prim[3] - c)*state_vector[0] + prim[3]*state_vector[3] + \
+        (prim[3] + c)*state_vector[4]
+    ret[4] = (h - c*prim[3])*state_vector[0] + ekin*state_vector[3] + \
+        prim[1]*state_vector[1] + prim[2]*state_vector[2] + \
+        (h + c*prim[3])*state_vector[4]
 
     return ret
+
 
 def _max_wave_speed_x(state_vector):
     prim = _primitive_variables(state_vector)
     return np.abs(prim[1]) + np.sqrt(prim[3]/prim[0])
 
+
 def _max_wave_speed_y(state_vector):
     prim = _primitive_variables(state_vector)
     return np.abs(prim[2]) + np.sqrt(prim[3]/prim[0])
 
+
 def _max_wave_speed_z(state_vector):
     prim = _primitive_variables(state_vector)
     return np.abs(prim[3]) + np.sqrt(prim[3]/prim[0])
+
 
 def flux_from_state(state, coords, dim):
     if dim == 0:
@@ -233,12 +266,14 @@ def flux_from_state(state, coords, dim):
         return _flux_from_state_y(state)
     return _flux_from_state_z(state)
 
+
 def multiply_with_left_eigenvectors(prim, state, dim):
     if dim == 0:
         return _multiply_with_left_eigenvectors_x(prim, state)
     if dim == 1:
         return _multiply_with_left_eigenvectors_y(prim, state)
     return _multiply_with_left_eigenvectors_z(prim, state)
+
 
 def multiply_with_right_eigenvectors(prim, state, dim):
     if dim == 0:
@@ -247,20 +282,24 @@ def multiply_with_right_eigenvectors(prim, state, dim):
         return _multiply_with_right_eigenvectors_y(prim, state)
     return _multiply_with_right_eigenvectors_z(prim, state)
 
-def max_wave_speed(U , coords, dim):
+
+def max_wave_speed(U, coords, dim):
     if dim == 0:
         return _max_wave_speed_x(U)
     if dim == 1:
         return _max_wave_speed_y(U)
     return _max_wave_speed_z(U)
 
+
 def source_func(U, coords):
     return 0.0*U
+
 
 def allowed_state(state):
     prim = _primitive_variables(state)
 
     # Want density and pressure positive
     return np.logical_and(prim[0] > 0.0, prim[4] > 0.0)
+
 
 jit_module(nopython=True, error_model="numpy")

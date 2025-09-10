@@ -1,7 +1,8 @@
 import numpy as np
-from mpi4py import MPI
 
-def save_dump(time, state, save_index, save_path, pos, global_dims, n_ghost):
+
+def save_dump(time, state, save_index, save_path,
+              pos, global_dims, n_ghost):
     '''Save current time and state in npz file'''
     t = np.asarray([time])
 
@@ -10,7 +11,9 @@ def save_dump(time, state, save_index, save_path, pos, global_dims, n_ghost):
 
     return
 
-def restore_from_dump(state, restore_index, restore_path, pos, global_dims, n_ghost):
+
+def restore_from_dump(state, restore_index, restore_path,
+                      pos, global_dims, n_ghost):
     '''Restore simulation time and state from npz file'''
 
     filename = restore_path + 'dump{}.npz'.format(restore_index)
@@ -21,5 +24,3 @@ def restore_from_dump(state, restore_index, restore_path, pos, global_dims, n_gh
     state = dump['state']
 
     return t, state
-
-
