@@ -65,6 +65,5 @@ def visualise(ini_file, save_index):
 from boxset.simulation import simulation
 
 simulation("/Users/sjp/Desktop/boxset/sod.ini", initial_conditions, set_boundary, restore_index=-1)
-#simulation("/home/sijmejanpaarde/streaming_instability.ini", initial_conditions, set_boundary, restore_index=-1)
 
 visualise("/Users/sjp/Desktop/boxset/sod.ini", 1)

@@ -166,31 +166,31 @@ def _max_wave_speed_y(state_vector):
     return np.abs(prim[2]) + np.sqrt(prim[3]/prim[0])
 
 
-def flux_from_state(state, coords, dim):
+def flux_from_state(state, coords, time, dim):
     if dim == 0:
         return _flux_from_state_x(state)
     return _flux_from_state_y(state)
 
 
-def multiply_with_left_eigenvectors(prim, state, dim):
+def multiply_with_left_eigenvectors(prim, state, time, dim):
     if dim == 0:
         return _multiply_with_left_eigenvectors_x(prim, state)
     return _multiply_with_left_eigenvectors_y(prim, state)
 
 
-def multiply_with_right_eigenvectors(prim, state, dim):
+def multiply_with_right_eigenvectors(prim, state, time, dim):
     if dim == 0:
         return _multiply_with_right_eigenvectors_x(prim, state)
     return _multiply_with_right_eigenvectors_y(prim, state)
 
 
-def max_wave_speed(U, coords, dim):
+def max_wave_speed(U, coords, time, dim):
     if dim == 0:
         return _max_wave_speed_x(U)
     return _max_wave_speed_y(U)
 
 
-def source_func(U, coords):
+def source_func(U, coords, time):
     return 0.0*U
 
 

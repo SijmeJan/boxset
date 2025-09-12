@@ -2,7 +2,7 @@ import numpy as np
 from numba import jit
 
 from .reconstruction.weno_ao_53 import calc_interface_flux, weno_r
-from .conservation_laws.dust_boltz import max_wave_speed, \
+from .conservation_laws.basic.euler_2d import max_wave_speed, \
     multiply_with_left_eigenvectors, multiply_with_right_eigenvectors, \
     flux_from_state, allowed_state, source_func
 from .domain_decomposition import send_boundaries
@@ -25,7 +25,7 @@ def min(arr):
 
 
 @jit
-def calc_time_step(state, coords, n_ghost, boundary_conditions):
+def calc_time_step(state, coords, time, n_ghost, boundary_conditions):
     '''Calculate allowed time step based on maximum wave speeds'''
     dt = 1.0e10
 
@@ -35,7 +35,7 @@ def calc_time_step(state, coords, n_ghost, boundary_conditions):
     # Loop over all space dimensions
     for i in range(0, len(coords)):
         x = coords[i]
-        vmax = max_wave_speed(state, coords, i)
+        vmax = max_wave_speed(state, coords, time, i)
         dt = min(np.asarray([dt, np.min((x[1] - x[0])/vmax)]))
 
     return dt
@@ -66,7 +66,7 @@ def total_interface_flux(Fplus, Fmin):
 
 
 @jit
-def calculate_interface_flux(U, centre_flux, a, dim):
+def calculate_interface_flux(U, centre_flux, a, time, dim):
     '''Calculate interface fluxes in one particular direction.
     This is where the bulk of the computational time is spent, usually.
     '''
@@ -83,9 +83,11 @@ def calculate_interface_flux(U, centre_flux, a, dim):
         # Multiply with left eigenvectors of cell i (only for systems)
         for j in range(0, 2*weno_r-1):
             Fplus[..., j] = \
-                multiply_with_left_eigenvectors(U[..., i], Fplus[..., j], dim)
+                multiply_with_left_eigenvectors(U[..., i], Fplus[..., j],
+                                                time, dim)
             Fmin[..., j] = \
-                multiply_with_left_eigenvectors(U[..., i], Fmin[..., j], dim)
+                multiply_with_left_eigenvectors(U[..., i], Fmin[..., j],
+                                                time, dim)
 
         # Add positive and negative parts: interface_flux[i] = flux_i+1/2
         interface_flux[..., i], interface_flux_safe[..., i] = \
@@ -94,24 +96,26 @@ def calculate_interface_flux(U, centre_flux, a, dim):
         # Multiply with right eigenvectors of cell i+2 (only for systems)
         interface_flux[..., i] = \
             multiply_with_right_eigenvectors(U[..., i],
-                                             interface_flux[..., i], dim)
+                                             interface_flux[..., i],
+                                             time, dim)
         interface_flux_safe[..., i] = \
             multiply_with_right_eigenvectors(U[..., i],
-                                             interface_flux_safe[..., i], dim)
+                                             interface_flux_safe[..., i],
+                                             time, dim)
 
     return interface_flux, interface_flux_safe
 
 
 @jit
-def add_to_rhs(rhs, U, coords, dim, n_ghost, dt_safe):
+def add_to_rhs(rhs, U, coords, time, dim, n_ghost, dt_safe):
     dx = coords[dim][1] - coords[dim][0]
 
     # Calculate fluxes at cell centres.
     # Force a copy of U in case the flux_from_state function returns a view.
-    centre_flux = flux_from_state(np.copy(U), coords, dim)
+    centre_flux = flux_from_state(np.copy(U), coords, time, dim)
 
     # a[..,i] = maximum wave speed associated with interface i+1/2
-    a = max_wave_speed(U, coords, dim)
+    a = max_wave_speed(U, coords, time, dim)
     for i in range(0, np.shape(U)[-1]-1):
         # Make sure these are arrays even for scalar states
         a0 = my_atleast_1d(a[..., i]).flatten()
@@ -124,7 +128,7 @@ def add_to_rhs(rhs, U, coords, dim, n_ghost, dt_safe):
         a[..., i] = np.reshape(a1, np.shape(a[..., i]))
 
     interface_flux, interface_flux_safe = \
-        calculate_interface_flux(U, centre_flux, a, dim)
+        calculate_interface_flux(U, centre_flux, a, time, dim)
 
     for i in range(n_ghost, np.shape(U)[-1]-n_ghost):
         # Check if U + dt_safe*rhs is allowed
@@ -147,7 +151,7 @@ def add_to_rhs(rhs, U, coords, dim, n_ghost, dt_safe):
     return rhs
 
 
-def calculate_rhs(state, coords, n_ghost, boundary_conditions,
+def calculate_rhs(state, coords, time, n_ghost, boundary_conditions,
                   cpu_grid, dt_safe):
     '''
     Calculate the right-hand side for the method of lines,
@@ -187,11 +191,11 @@ def calculate_rhs(state, coords, n_ghost, boundary_conditions,
         rhs = np.swapaxes(rhs, dim+1, len(coords))
 
         # Add contribution from this dimension to rhs
-        rhs = add_to_rhs(rhs, state, coords, dim, n_ghost, dt_safe)
+        rhs = add_to_rhs(rhs, state, coords, time, dim, n_ghost, dt_safe)
 
         # Swap back to original shape
         state = np.swapaxes(state, dim+1, len(coords))
         rhs = np.swapaxes(rhs, dim+1, len(coords))
 
     # Add source term
-    return rhs + source_func(state, coords)
+    return rhs + source_func(state, coords, time)

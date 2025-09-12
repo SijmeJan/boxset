@@ -133,7 +133,7 @@ def _max_wave_speed_z(state_vector):
     return np.maximum(max_gas, max_dust)
 
 
-def flux_from_state(state, coords, dim):
+def flux_from_state(state, coords, time, dim):
     if dim == 0:
         return _flux_from_state_x(state)
     # if dim == 1:
@@ -141,7 +141,7 @@ def flux_from_state(state, coords, dim):
     return _flux_from_state_z(state)
 
 
-def multiply_with_left_eigenvectors(prim, state, dim):
+def multiply_with_left_eigenvectors(prim, state, time, dim):
     if dim == 0:
         return _multiply_with_left_eigenvectors_x(prim, state)
     # if dim == 1:
@@ -149,7 +149,7 @@ def multiply_with_left_eigenvectors(prim, state, dim):
     return _multiply_with_left_eigenvectors_z(prim, state)
 
 
-def multiply_with_right_eigenvectors(prim, state, dim):
+def multiply_with_right_eigenvectors(prim, state, time, dim):
     if dim == 0:
         return _multiply_with_right_eigenvectors_x(prim, state)
     # if dim == 1:
@@ -157,7 +157,7 @@ def multiply_with_right_eigenvectors(prim, state, dim):
     return _multiply_with_right_eigenvectors_z(prim, state)
 
 
-def max_wave_speed(U, coords, dim):
+def max_wave_speed(U, coords, time, dim):
     if dim == 0:
         return _max_wave_speed_x(U)
     # if dim == 1:
@@ -165,7 +165,7 @@ def max_wave_speed(U, coords, dim):
     return _max_wave_speed_z(U)
 
 
-def source_func(U, coords):
+def source_func(U, coords, time):
     ret = np.zeros_like(U)
 
     mu = U[4]/U[0]

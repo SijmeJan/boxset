@@ -63,31 +63,31 @@ def _max_wave_speed_y(state_vector, coords):
     return ret
 
 
-def flux_from_state(state, coords, dim):
+def flux_from_state(state, coords, time, dim):
     if dim == 0:
         return _flux_from_state_x(state, coords)
     return _flux_from_state_y(state, coords)
 
 
-def multiply_with_left_eigenvectors(prim, state, dim):
+def multiply_with_left_eigenvectors(prim, state, time, dim):
     if dim == 0:
         return _multiply_with_left_eigenvectors_x(prim, state)
     return _multiply_with_left_eigenvectors_y(prim, state)
 
 
-def multiply_with_right_eigenvectors(prim, state, dim):
+def multiply_with_right_eigenvectors(prim, state, time, dim):
     if dim == 0:
         return _multiply_with_right_eigenvectors_x(prim, state)
     return _multiply_with_right_eigenvectors_y(prim, state)
 
 
-def max_wave_speed(U, coords, dim):
+def max_wave_speed(U, coords, time, dim):
     if dim == 0:
         return _max_wave_speed_x(U, coords)
     return _max_wave_speed_y(U, coords)
 
 
-def source_func(U, coords):
+def source_func(U, coords, time):
     '''
     Shape of U should be (n_eq, len(x), len(y),...)
     '''

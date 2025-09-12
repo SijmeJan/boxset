@@ -59,23 +59,23 @@ def _max_wave_speed_x(state_vector):
     return np.abs(prim[1]) + sound_speed
 
 
-def flux_from_state(state, coords, dim):
+def flux_from_state(state, coords, time, dim):
     return _flux_from_state_x(state)
 
 
-def multiply_with_left_eigenvectors(prim, state, dim):
+def multiply_with_left_eigenvectors(prim, state, time, dim):
     return _multiply_with_left_eigenvectors_x(prim, state)
 
 
-def multiply_with_right_eigenvectors(prim, state, dim):
+def multiply_with_right_eigenvectors(prim, state, time, dim):
     return _multiply_with_right_eigenvectors_x(prim, state)
 
 
-def max_wave_speed(U, coords, dim):
+def max_wave_speed(U, coords, time, dim):
     return _max_wave_speed_x(U)
 
 
-def source_func(U, coords):
+def source_func(U, coords, time):
     return 0*U
 
 
