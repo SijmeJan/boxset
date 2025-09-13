@@ -51,7 +51,7 @@ def timeloop(state, coords, start_time, end_time, courant_number, n_ghost,
                              boundary_conditions, cpu_grid, safety_factor)
 
         if MPI.COMM_WORLD.Get_rank() == 0:
-            print('t = ', t, 'dt = ', dt)
+            print('t = ', t, 'dt = ', dt, t % (4/3))
         t = t + dt
 
     return state

@@ -6,7 +6,7 @@ from .timeloop import timeloop
 from .coords import create_coordinates
 from .output.parallel import save_dump, restore_from_dump
 from .domain_decomposition import get_cpu_grid
-
+from .remap.remap_sbox import remap
 
 def simulation(configuration_file, initial_conditions, boundary_conditions,
                restore_index=-1):
@@ -79,6 +79,9 @@ def simulation(configuration_file, initial_conditions, boundary_conditions,
         state = timeloop(state, coords, t, t_stop, cfl, n_ghost,
                          boundary_conditions, cpu_grid, safety_factor)
         t = t_stop
+
+        # Remap
+        state = remap(state, coords, dump_dt, cpu_grid, n_ghost)
 
         # Data dump
         save_dump(t, state, save_index, config['Output']['direc'], pos,
