@@ -126,6 +126,6 @@ def visualise(ini_file, save_index):
 
 from boxset.simulation import simulation
 
-#simulation("/Users/sjp/Desktop/boxset/sbox.ini", initial_conditions, set_boundary, restore_index=-1)
+simulation("/Users/sjp/Desktop/boxset/sbox.ini", initial_conditions, set_boundary, restore_index=-1)
 
 visualise("/Users/sjp/Desktop/boxset/sbox.ini", 2)

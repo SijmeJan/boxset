@@ -2,7 +2,7 @@ import numpy as np
 from numba import jit
 
 from .reconstruction.cweno_3rd import calc_interface_flux, weno_r
-from .conservation_laws.iso_sbox import max_wave_speed, \
+from .conservation_laws.adi_sbox import max_wave_speed, \
     multiply_with_left_eigenvectors, multiply_with_right_eigenvectors, \
     flux_from_state, allowed_state, source_func
 from .domain_decomposition import send_boundaries
