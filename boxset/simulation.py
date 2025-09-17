@@ -43,7 +43,7 @@ def simulation(configuration_file, initial_conditions, boundary_conditions,
     cpu_grid, my_pos = get_cpu_grid(global_dims)
 
     # Set initial conditions
-    state = initial_conditions(coords)
+    state = initial_conditions(coords, config)
 
     # Get parameters from config dictionary
     start_time = np.float64(config['Time']['start_time'])
