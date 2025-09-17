@@ -246,17 +246,17 @@ def _multiply_with_right_eigenvectors_z(primitive_variables, state_vector):
 
 def _max_wave_speed_x(state_vector):
     prim = _primitive_variables(state_vector)
-    return np.abs(prim[1]) + np.sqrt(prim[3]/prim[0])
+    return np.abs(prim[1]) + np.sqrt(prim[4]/prim[0])
 
 
 def _max_wave_speed_y(state_vector):
     prim = _primitive_variables(state_vector)
-    return np.abs(prim[2]) + np.sqrt(prim[3]/prim[0])
+    return np.abs(prim[2]) + np.sqrt(prim[4]/prim[0])
 
 
 def _max_wave_speed_z(state_vector):
     prim = _primitive_variables(state_vector)
-    return np.abs(prim[3]) + np.sqrt(prim[3]/prim[0])
+    return np.abs(prim[3]) + np.sqrt(prim[4]/prim[0])
 
 
 def flux_from_state(state, coords, time, dim):
