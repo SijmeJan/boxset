@@ -1,9 +1,10 @@
 import numpy as np
 from numba import jit_module
 
-gamma = 1.4
+gamma = 5/3
 shear_param = 1.5
-g0 = 1.0
+beta = 2.0
+g0 = gamma*beta**2/(gamma-1)
 
 def _primitive_variables(conserved_variables):
     prim = np.zeros_like(conserved_variables)
@@ -259,7 +260,7 @@ def _multiply_with_right_eigenvectors_z(primitive_variables, state_vector):
 
 def _max_wave_speed_x(state_vector):
     prim = _primitive_variables(state_vector)
-    return np.abs(prim[1]) + np.sqrt(prim[4]/prim[0])
+    return np.abs(prim[1]) + np.sqrt(gamma*prim[4]/prim[0])
 
 
 def _max_wave_speed_y(state_vector, t):
@@ -268,12 +269,12 @@ def _max_wave_speed_y(state_vector, t):
     st = shear_param*(t % (2/shear_param))
     eta = np.sqrt(1 + st*st)
 
-    return np.abs(prim[2] + st*prim[1]) + np.sqrt(prim[4]/prim[0])*eta
+    return np.abs(prim[2] + st*prim[1]) + np.sqrt(gamma*prim[4]/prim[0])*eta
 
 
 def _max_wave_speed_z(state_vector):
     prim = _primitive_variables(state_vector)
-    return np.abs(prim[3]) + np.sqrt(prim[4]/prim[0])
+    return np.abs(prim[3]) + np.sqrt(gamma*prim[4]/prim[0])
 
 
 def flux_from_state(state, coords, time, dim):

@@ -76,7 +76,7 @@ def _multiply_with_right_eigenvectors_x(primitive_variables, state_vector):
 def _max_wave_speed_x(state_vector):
     prim = _primitive_variables(state_vector)
 
-    return np.abs(prim[1]) + np.sqrt(prim[2]/prim[0])
+    return np.abs(prim[1]) + np.sqrt(gamma*prim[2]/prim[0])
 
 
 def flux_from_state(state, coords, time, dim):
