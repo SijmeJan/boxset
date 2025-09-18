@@ -59,8 +59,8 @@ def initial_conditions(coords, config):
     for i in range(0, len(z)):
         U[0,:,:,i] = np.exp(-z[i])
 
-    #U = add_kolmogorov_noise(U, coords, noise_amp,
-    #                         get_grid_dimensions(config), rng)
+    U = add_kolmogorov_noise(U, coords, noise_amp,
+                             get_grid_dimensions(config), rng)
     U[4,...] = 0.5*(U[1,...]**2 + U[2,...]**2 + U[3,...]**2)/U[0,...] +\
       U[0,...]*gamma*beta**2/(gamma-1)**2
 
@@ -85,7 +85,9 @@ def visualise(ini_file, save_index):
     y = coords[1]
     z = coords[-1]
 
-    state = initial_conditions(coords, config)
+    #state = initial_conditions(coords, config)
+    n_eq = 5
+    state = np.zeros((n_eq, len(coords[0]), len(coords[1]), len(coords[2])))
 
     t, U = restore_from_dump(state, save_index, config['Output']['direc'], pos, global_dims, n_ghost)
     #U = state
@@ -100,8 +102,8 @@ def visualise(ini_file, save_index):
     vy = U[2,n_ghost:-n_ghost,n_ghost:-n_ghost,n_ghost:-n_ghost]/dens
     vz = U[3,n_ghost:-n_ghost,n_ghost:-n_ghost,n_ghost:-n_ghost]/dens
 
-    plt.plot(np.mean(vz,axis=(0,1)))
-    plt.show()
+    #plt.plot(np.mean(vz,axis=(0,1)))
+    #plt.show()
 
     print('Perturbed kinetic energy: ', np.sum(0.5*(vx*vx+vy*vy+vz*vz)*(x[1]-x[0])*(y[1]-y[0])*(z[1]-z[0])))
 
@@ -184,5 +186,6 @@ def visualise(ini_file, save_index):
 from boxset.simulation import simulation
 
 #simulation("/Users/sjp/Desktop/boxset/zvi.ini", initial_conditions, set_boundary, restore_index=-1)
+#simulation("/home/sijmejanpaarde/zvi.ini", initial_conditions, set_boundary, restore_index=-1)
 
-visualise("/Users/sjp/Desktop/boxset/zvi.ini", 9)
+visualise("/Users/sjp/Desktop/boxset/zvi.ini", 4)
