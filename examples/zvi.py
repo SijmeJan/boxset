@@ -80,7 +80,7 @@ def visualise(ini_file, save_index):
 
     n_ghost = np.int32(config['Grid']['n_ghost'])
 
-    coords, pos, global_dims = create_coordinates(config)
+    coords, pos, global_dims, periodic_flags = create_coordinates(config)
     x = coords[0]
     y = coords[1]
     z = coords[-1]
@@ -102,15 +102,15 @@ def visualise(ini_file, save_index):
     vy = U[2,n_ghost:-n_ghost,n_ghost:-n_ghost,n_ghost:-n_ghost]/dens
     vz = U[3,n_ghost:-n_ghost,n_ghost:-n_ghost,n_ghost:-n_ghost]/dens
 
-    #plt.plot(np.mean(vz,axis=(0,1)))
-    #plt.show()
+    plt.plot(np.mean(vz,axis=(0,1)))
+    plt.show()
 
     print('Perturbed kinetic energy: ', np.sum(0.5*(vx*vx+vy*vy+vz*vz)*(x[1]-x[0])*(y[1]-y[0])*(z[1]-z[0])))
 
-    dens = dens[:,:,8]
-    vx = vx[:,:,8]
-    vy = vy[:,:,8]
-    vz = vz[:,:,8]
+    dens = dens[:,:,32]
+    vx = vx[:,:,32]
+    vy = vy[:,:,32]
+    vz = vz[:,:,32]
 
     minvel = np.min([vx, vy, vz])
     maxvel = np.max([vx, vy, vz])
@@ -188,4 +188,4 @@ from boxset.simulation import simulation
 #simulation("/Users/sjp/Desktop/boxset/zvi.ini", initial_conditions, set_boundary, restore_index=-1)
 #simulation("/home/sijmejanpaarde/zvi.ini", initial_conditions, set_boundary, restore_index=-1)
 
-visualise("/Users/sjp/Desktop/boxset/zvi.ini", 4)
+visualise("/Users/sjp/Desktop/boxset/zvi.ini", 1)

@@ -93,7 +93,7 @@ def get_pos_in_global_array(config):
     return ret_pos, ret_size
 
 
-def send_boundaries(state, cpu_grid, dim, n_ghost):
+def send_boundaries(state, cpu_grid, dim, n_ghost, periodic_flag):
     '''Send ghost cell variables to neighbouring MPI processes.
 
     Parameters:
@@ -102,12 +102,10 @@ def send_boundaries(state, cpu_grid, dim, n_ghost):
     cpu_grid: grid of cpus (output of get_cpu_grid)
     dim: current dimension
     n_ghost: number of ghost cells
-
+    periodic_flag: bool whether this dimension is periodic
     Returns:
 
     updated state'''
-
-    periodic_flag = True
 
     comm = MPI.COMM_WORLD
     my_position_in_grid = np.asarray(cpu_grid == comm.Get_rank()).nonzero()

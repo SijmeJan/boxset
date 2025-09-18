@@ -23,6 +23,7 @@ def create_coordinates(config):
 
     # List of coordinate arrays
     ret = []
+    periodic_flags = []
 
     # Loop through all spatial dimensions
     for dim in range(0, len(global_dims)):
@@ -39,4 +40,6 @@ def create_coordinates(config):
                                xmax + (n_ghost-0.5)*dx,
                                local_N[dim] + 2*n_ghost))
 
-    return ret, pos, global_dims
+        periodic_flags.append(eval(config['Grid']['Periodic{}'.format(dim)]))
+
+    return ret, pos, global_dims, periodic_flags

@@ -4,7 +4,7 @@ from mpi4py import MPI
 from ..domain_decomposition import send_boundaries
 
 
-def remap(state, coords, time_shift, cpu_grid, n_ghost):
+def remap(state, coords, time_shift, cpu_grid, n_ghost, periodic_flags):
     '''Remap using shearing box background velocity.
     Time shift should be 4/3.'''
 
@@ -32,7 +32,7 @@ def remap(state, coords, time_shift, cpu_grid, n_ghost):
         state[:, :, len(y)-n_ghost:len(y), ...] =\
             state[:, :, n_ghost:2*n_ghost, ...]
 
-        send_boundaries(state, cpu_grid, 1, n_ghost)
+        send_boundaries(state, cpu_grid, 1, n_ghost, periodic_flags[1])
 
         for i in range(0, len(x)):
             current_shift = \

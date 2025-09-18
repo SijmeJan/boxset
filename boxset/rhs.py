@@ -152,7 +152,7 @@ def add_to_rhs(rhs, U, coords, time, dim, n_ghost, dt_safe):
 
 
 def calculate_rhs(state, coords, time, n_ghost, boundary_conditions,
-                  cpu_grid, dt_safe):
+                  cpu_grid, dt_safe, periodic_flags):
     '''
     Calculate the right-hand side for the method of lines,
     based on state and coordinates.
@@ -169,6 +169,7 @@ def calculate_rhs(state, coords, time, n_ghost, boundary_conditions,
     cpu_grid: grid of cpus for parallel computation
     dt_safe: if U + dt_safe*rhs results in an unphysical state, use more
     diffusive flux.
+    periodic_flags: flag whether dimensions are periodic
 
     Returns:
 
@@ -184,7 +185,7 @@ def calculate_rhs(state, coords, time, n_ghost, boundary_conditions,
         state = boundary_conditions(state, coords, dim, n_ghost)
 
         # MPI: send/recv boundaries
-        state = send_boundaries(state, cpu_grid, dim, n_ghost)
+        state = send_boundaries(state, cpu_grid, dim, n_ghost, periodic_flags[dim])
 
         # Swap dimension so that state shape is (n_state, dim1, dim2, ..., dim)
         state = np.swapaxes(state, dim+1, len(coords))

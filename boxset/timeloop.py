@@ -6,7 +6,7 @@ from .rhs import calculate_rhs, calc_time_step
 
 
 def timeloop(state, coords, start_time, end_time, courant_number, n_ghost,
-             boundary_conditions, cpu_grid, safety_factor):
+             boundary_conditions, cpu_grid, safety_factor, periodic_flags):
     '''
     Evolve the state from start_time to end_time.
 
@@ -22,6 +22,7 @@ def timeloop(state, coords, start_time, end_time, courant_number, n_ghost,
     cpu_grid: grid of cpus for parallel computation
     safety_factor: switch to low-order spatial interpolation if taking a
     timestep of safety_factor*dt would result in an unphysical state
+    periodic_flags: flags whether dimensions are periodic
 
     Returns:
 
@@ -48,7 +49,7 @@ def timeloop(state, coords, start_time, end_time, courant_number, n_ghost,
 
         # Do one time step
         state = time_stepper(state, coords, t, dt, calculate_rhs, n_ghost,
-                             boundary_conditions, cpu_grid, safety_factor)
+                             boundary_conditions, cpu_grid, safety_factor, periodic_flags)
 
         if MPI.COMM_WORLD.Get_rank() == 0:
             print('t = ', t, 'dt = ', dt)

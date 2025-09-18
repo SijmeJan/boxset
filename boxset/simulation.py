@@ -37,7 +37,7 @@ def simulation(configuration_file, initial_conditions, boundary_conditions,
     config = comm.bcast(config, root=0)
 
     # Spatial coordinate list
-    coords, pos, global_dims = create_coordinates(config)
+    coords, pos, global_dims, periodic_flags = create_coordinates(config)
 
     # CPU grid
     cpu_grid, my_pos = get_cpu_grid(global_dims)
@@ -77,11 +77,11 @@ def simulation(configuration_file, initial_conditions, boundary_conditions,
 
         # Evolve until next dump
         state = timeloop(state, coords, t, t_stop, cfl, n_ghost,
-                         boundary_conditions, cpu_grid, safety_factor)
+                         boundary_conditions, cpu_grid, safety_factor, periodic_flags)
         t = t_stop
 
         # Remap
-        state = remap(state, coords, dump_dt, cpu_grid, n_ghost)
+        state = remap(state, coords, dump_dt, cpu_grid, n_ghost, periodic_flags)
 
         # Data dump
         save_dump(t, state, save_index, config['Output']['direc'], pos,
