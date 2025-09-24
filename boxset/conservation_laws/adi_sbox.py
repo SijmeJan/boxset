@@ -62,7 +62,7 @@ def _flux_from_state_z(state_vector):
 def _multiply_with_left_eigenvectors_x(primitive_variables, state_vector):
     '''Multiply state_vector with left eigenvectors
     based on primitive_variables'''
-    return state_vector
+    #return state_vector
 
     prim = _primitive_variables(primitive_variables)
 
@@ -98,10 +98,13 @@ def _multiply_with_left_eigenvectors_x(primitive_variables, state_vector):
     return ret
 
 
-def _multiply_with_left_eigenvectors_y(primitive_variables, state_vector):
+def _multiply_with_left_eigenvectors_y(primitive_variables, state_vector, time):
     '''Multiply state_vector with left eigenvectors
     based on primitive_variables'''
-    return state_vector
+    #return state_vector
+
+    St = shear_param*(time % (2/shear_param))
+    eta = np.sqrt(1 + St*St)
 
     prim = _primitive_variables(primitive_variables)
 
@@ -114,12 +117,14 @@ def _multiply_with_left_eigenvectors_y(primitive_variables, state_vector):
     ret = np.zeros_like(state_vector)
 
     ret[0] = \
-        0.5*(b2 + prim[2]/c)*state_vector[0] \
-        - 0.5*b1*prim[1]*state_vector[1] \
-        - 0.5*(b1*prim[2] + 1/c)*state_vector[2] \
+        0.5*(b2 + (prim[2] + St*prim[1])/c/eta)*state_vector[0] \
+        - 0.5*(St/c/eta + b1*prim[1])*state_vector[1] \
+        - 0.5*(1/c/eta + b1*prim[2])*state_vector[2] \
         - 0.5*b1*prim[3]*state_vector[3] \
         + 0.5*b1*state_vector[4]
-    ret[1] = state_vector[1] - prim[1]*state_vector[0]
+    ret[1] = (St*prim[2] - prim[1])*state_vector[0]/eta/eta \
+        + state_vector[1]/eta/eta \
+        - St*state_vector[2]/eta/eta
     ret[2] = \
         (1 - b2)*state_vector[0] \
         + b1*prim[1]*state_vector[1] \
@@ -128,9 +133,9 @@ def _multiply_with_left_eigenvectors_y(primitive_variables, state_vector):
         - b1*state_vector[4]
     ret[3] = state_vector[3] - prim[3]*state_vector[0]
     ret[4] = \
-        0.5*(b2 - prim[2]/c)*state_vector[0] \
-        - 0.5*b1*prim[1]*state_vector[1] \
-        - 0.5*(b1*prim[2] - 1/c)*state_vector[2] \
+        0.5*(b2 - (prim[2] + St*prim[1])/c/eta)*state_vector[0] \
+        + 0.5*(St/c/eta - b1*prim[1])*state_vector[1] \
+        - 0.5*(b1*prim[2] - 1/c/eta)*state_vector[2] \
         - 0.5*b1*prim[3]*state_vector[3] \
         + 0.5*b1*state_vector[4]
 
@@ -140,7 +145,7 @@ def _multiply_with_left_eigenvectors_y(primitive_variables, state_vector):
 def _multiply_with_left_eigenvectors_z(primitive_variables, state_vector):
     '''Multiply state_vector with left eigenvectors
     based on primitive_variables'''
-    return state_vector
+    #return state_vector
 
     prim = _primitive_variables(primitive_variables)
 
@@ -179,7 +184,7 @@ def _multiply_with_left_eigenvectors_z(primitive_variables, state_vector):
 def _multiply_with_right_eigenvectors_x(primitive_variables, state_vector):
     '''Multiply state_vector with right eigenvectors
     based on primitive_variables'''
-    return state_vector
+    #return state_vector
 
     prim = _primitive_variables(primitive_variables)
 
@@ -204,10 +209,13 @@ def _multiply_with_right_eigenvectors_x(primitive_variables, state_vector):
     return ret
 
 
-def _multiply_with_right_eigenvectors_y(primitive_variables, state_vector):
+def _multiply_with_right_eigenvectors_y(primitive_variables, state_vector, time):
     '''Multiply state_vector with right eigenvectors
     based on primitive_variables'''
-    return state_vector
+    #return state_vector
+
+    St = shear_param*(time % (2/shear_param))
+    eta = np.sqrt(1 + St*St)
 
     prim = _primitive_variables(primitive_variables)
 
@@ -219,14 +227,23 @@ def _multiply_with_right_eigenvectors_y(primitive_variables, state_vector):
 
     ret = np.zeros_like(state_vector)
 
-    ret[0] = state_vector[0] + state_vector[2] + state_vector[4]
-    ret[1] = prim[1]*ret[0] + state_vector[1]
-    ret[2] = (prim[2] - c)*state_vector[0] + prim[2]*state_vector[2] + \
-        (prim[2] + c)*state_vector[4]
+    ret[0] = state_vector[0] \
+        + state_vector[2] \
+        + state_vector[4]
+    ret[1] = (prim[1] - St*c/eta)*state_vector[0] \
+        + state_vector[1] \
+        + prim[1]*state_vector[2] \
+        + (prim[1] + St*c/eta)*state_vector[4]
+    ret[2] = (prim[2] - c/eta)*state_vector[0] \
+        - St*state_vector[1] \
+        + prim[2]*state_vector[2] \
+        + (prim[2] + c/eta)*state_vector[4]
     ret[3] = prim[3]*ret[0] + state_vector[3]
-    ret[4] = (h - c*prim[2])*state_vector[0] + ekin*state_vector[2] + \
-        prim[1]*state_vector[1] + prim[3]*state_vector[3] + \
-        (h + c*prim[2])*state_vector[4]
+    ret[4] = (h - c*(prim[2] + St*prim[1])/eta)*state_vector[0] \
+        + (prim[1] - St*prim[2])*state_vector[1] \
+        + ekin*state_vector[2] \
+        + prim[3]*state_vector[3] \
+        + (h + c*(prim[2] + St*prim[1])/eta)*state_vector[4]
 
     return ret
 
@@ -234,7 +251,7 @@ def _multiply_with_right_eigenvectors_y(primitive_variables, state_vector):
 def _multiply_with_right_eigenvectors_z(primitive_variables, state_vector):
     '''Multiply state_vector with right eigenvectors
     based on primitive_variables'''
-    return state_vector
+    #return state_vector
 
     prim = _primitive_variables(primitive_variables)
 
@@ -289,7 +306,7 @@ def multiply_with_left_eigenvectors(prim, state, time, dim):
     if dim == 0:
         return _multiply_with_left_eigenvectors_x(prim, state)
     if dim == 1:
-        return _multiply_with_left_eigenvectors_y(prim, state)
+        return _multiply_with_left_eigenvectors_y(prim, state, time)
     return _multiply_with_left_eigenvectors_z(prim, state)
 
 
@@ -297,7 +314,7 @@ def multiply_with_right_eigenvectors(prim, state, time, dim):
     if dim == 0:
         return _multiply_with_right_eigenvectors_x(prim, state)
     if dim == 1:
-        return _multiply_with_right_eigenvectors_y(prim, state)
+        return _multiply_with_right_eigenvectors_y(prim, state, time)
     return _multiply_with_right_eigenvectors_z(prim, state)
 
 
