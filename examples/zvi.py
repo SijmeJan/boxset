@@ -102,15 +102,20 @@ def visualise(ini_file, save_index):
     vy = U[2,n_ghost:-n_ghost,n_ghost:-n_ghost,n_ghost:-n_ghost]/dens
     vz = U[3,n_ghost:-n_ghost,n_ghost:-n_ghost,n_ghost:-n_ghost]/dens
 
-    plt.plot(np.mean(vz,axis=(0,1)))
-    plt.show()
+    #plt.plot(np.mean(vz,axis=(0,1)))
+    #plt.show()
 
     print('Perturbed kinetic energy: ', np.sum(0.5*(vx*vx+vy*vy+vz*vz)*(x[1]-x[0])*(y[1]-y[0])*(z[1]-z[0])))
 
-    dens = dens[:,:,32]
-    vx = vx[:,:,32]
-    vy = vy[:,:,32]
-    vz = vz[:,:,32]
+    dens = dens[:,:,16]
+    vx = vx[:,:,16]
+    vy = vy[:,:,16]
+    vz = vz[:,:,16]
+
+    dvydx = (np.roll(vy, -1, axis=0) - vy)/(x[1]-x[0])
+    dvxdy = (np.roll(vx, -1, axis=1) - vx)/(y[1]-y[0])
+    vort = dvydx - dvxdy
+    rossby = 0.5*vort
 
     minvel = np.min([vx, vy, vz])
     maxvel = np.max([vx, vy, vz])
@@ -121,8 +126,9 @@ def visualise(ini_file, save_index):
     fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, figsize=(16,4))
 
     cf1 = ax1.contourf(x[n_ghost:-n_ghost], y[n_ghost:-n_ghost],
-                      np.transpose(np.log10(dens)),
-                      levels=100, cmap='plasma')
+                      np.transpose(rossby),
+                      levels=100, cmap='jet')
+    fig.colorbar(cf1, ax=ax1)
 
     cf2 = ax2.contourf(x[n_ghost:-n_ghost], y[n_ghost:-n_ghost],
                    np.transpose(vx),
@@ -185,7 +191,7 @@ def visualise(ini_file, save_index):
 
 from boxset.simulation import simulation
 
-#simulation("/Users/sjp/Desktop/boxset/zvi.ini", initial_conditions, set_boundary, restore_index=-1)
+simulation("/Users/sjp/Desktop/boxset/zvi.ini", initial_conditions, set_boundary, restore_index=-1)
 #simulation("/home/sijmejanpaarde/zvi.ini", initial_conditions, set_boundary, restore_index=-1)
 
-visualise("/Users/sjp/Desktop/boxset/zvi.ini", 1)
+#visualise("/Users/sjp/Desktop/boxset/zvi.ini", 17)
