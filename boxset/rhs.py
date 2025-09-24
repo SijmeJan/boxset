@@ -1,7 +1,7 @@
 import numpy as np
 from numba import jit
 
-from .reconstruction.cweno_3rd import calc_interface_flux, weno_r
+from .reconstruction.weno_ao_53 import calc_interface_flux, weno_r
 from .conservation_laws.adi_sbox import max_wave_speed, \
     multiply_with_left_eigenvectors, multiply_with_right_eigenvectors, \
     flux_from_state, allowed_state, source_func
