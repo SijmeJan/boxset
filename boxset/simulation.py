@@ -90,3 +90,5 @@ def simulation(configuration_file, initial_conditions, boundary_conditions,
 
         if comm.Get_rank() == 0:
             print('Dump at t = ', t)
+
+        comm.barrier()
