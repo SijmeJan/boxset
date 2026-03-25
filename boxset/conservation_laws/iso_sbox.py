@@ -193,46 +193,46 @@ def _max_wave_speed_z(state_vector):
 def flux_from_state(state, coords, time, dim):
     if dim == 0:
         return _flux_from_state_x(state)
-    if dim == 1:
-        return _flux_from_state_y(state, time)
+    #if dim == 1:
+    #    return _flux_from_state_y(state, time)
     return _flux_from_state_z(state)
 
 
 def multiply_with_left_eigenvectors(prim, state, time, dim):
     if dim == 0:
         return _multiply_with_left_eigenvectors_x(prim, state)
-    if dim == 1:
-        return _multiply_with_left_eigenvectors_y(prim, state, time)
+    #if dim == 1:
+    #    return _multiply_with_left_eigenvectors_y(prim, state, time)
     return _multiply_with_left_eigenvectors_z(prim, state)
 
 
 def multiply_with_right_eigenvectors(prim, state, time, dim):
     if dim == 0:
         return _multiply_with_right_eigenvectors_x(prim, state)
-    if dim == 1:
-        return _multiply_with_right_eigenvectors_y(prim, state, time)
+    #if dim == 1:
+    #    return _multiply_with_right_eigenvectors_y(prim, state, time)
     return _multiply_with_right_eigenvectors_z(prim, state)
 
 
 def max_wave_speed(U, coords, time, dim):
     if dim == 0:
         return _max_wave_speed_x(U)
-    if dim == 1:
-        return _max_wave_speed_y(U, time)
+    #if dim == 1:
+    #    return _max_wave_speed_y(U, time)
     return _max_wave_speed_z(U)
 
 
 def source_func(U, coords, time):
     ret = np.zeros_like(U)
-    #z = coords[2]
+    z = coords[-1]
 
-    ret[1] = 2*U[2]
-    ret[2] = (shear_param - 2)*U[1]
+    #ret[1] = 2*U[2]
+    #ret[2] = (shear_param - 2)*U[1]
 
-    #for i in range(0, len(z)):
-    #    ret[1, ..., i] = 2*U[2, ..., i]
-    #    ret[2, ..., i] = (shear_param - 2)*U[1, ..., i]
-    #    #ret[3, ..., i] = -U[0, ..., i]*z[i]
+    for i in range(0, len(z)):
+        ret[1, ..., i] = 2*U[2, ..., i]
+        ret[2, ..., i] = (shear_param - 2)*U[1, ..., i]
+        ret[3, ..., i] = -U[0, ..., i]*z[i]
 
     return ret
 

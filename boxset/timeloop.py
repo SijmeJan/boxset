@@ -1,12 +1,13 @@
 import numpy as np
-from mpi4py import MPI
+#from mpi4py import MPI
+import numba_mpi
+from numba import jit_module
 
 from .timesteppers.rk3 import time_stepper, rk_cfl
 from .rhs import calculate_rhs, calc_time_step
 
-
 def timeloop(state, coords, start_time, end_time, courant_number, n_ghost,
-             boundary_conditions, cpu_grid, safety_factor, periodic_flags):
+             boundary_conditions, cpu_grid, safety_factor, periodic_flags, user_source_func):
     '''
     Evolve the state from start_time to end_time.
 
@@ -23,6 +24,7 @@ def timeloop(state, coords, start_time, end_time, courant_number, n_ghost,
     safety_factor: switch to low-order spatial interpolation if taking a
     timestep of safety_factor*dt would result in an unphysical state
     periodic_flags: flags whether dimensions are periodic
+    source_func: source term function
 
     Returns:
 
@@ -39,9 +41,12 @@ def timeloop(state, coords, start_time, end_time, courant_number, n_ghost,
         # MPI: calculate minimum time step
         dt_local = np.asarray([dt_local])
         dt = dt_local.copy()
-        MPI.COMM_WORLD.Allreduce([dt_local, MPI.DOUBLE],
-                                 [dt, MPI.DOUBLE], op=MPI.MIN)
+
+        #MPI.COMM_WORLD.Allreduce([dt_local, MPI.DOUBLE],
+        #                         [dt, MPI.DOUBLE], op=MPI.MIN)
+        numba_mpi.allreduce(dt_local, dt, numba_mpi.Operator.MIN)
         dt = dt[0]
+
 
         # End exactly on end_time
         if t + dt > end_time:
@@ -49,10 +54,13 @@ def timeloop(state, coords, start_time, end_time, courant_number, n_ghost,
 
         # Do one time step
         state = time_stepper(state, coords, t, dt, calculate_rhs, n_ghost,
-                             boundary_conditions, cpu_grid, safety_factor, periodic_flags)
+                             boundary_conditions, cpu_grid, safety_factor, periodic_flags, user_source_func)
 
-        if MPI.COMM_WORLD.Get_rank() == 0:
+        if numba_mpi.rank() == 0:
+            #if MPI.COMM_WORLD.Get_rank() == 0:
             print('t = ', t, 'dt = ', dt)
         t = t + dt
 
     return state
+
+jit_module(nopython=True, error_model="numpy")

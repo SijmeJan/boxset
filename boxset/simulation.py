@@ -6,9 +6,23 @@ from .timeloop import timeloop
 from .coords import create_coordinates
 from .output.parallel import save_dump, restore_from_dump
 from .domain_decomposition import get_cpu_grid
-from .remap.remap_sbox import remap
+from .remap.remap_dummy import remap
 
-def simulation(configuration_file, initial_conditions, boundary_conditions,
+def read_config_file(configuration_file):
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+
+    # Read from ini file. Rank 0 reads, then broadcasts to everyone.
+    config = []
+    if rank == 0:
+        config = configparser.ConfigParser()
+        config.read(configuration_file)
+    config = comm.bcast(config, root=0)
+
+    return config
+
+
+def simulation(configuration_file, initial_conditions, boundary_conditions, user_source_func,
                restore_index=-1):
     '''Run simulation based on configuration file, and functions for
     setting initial and boundary conditions.
@@ -22,6 +36,7 @@ def simulation(configuration_file, initial_conditions, boundary_conditions,
     boundary conditions: function to set boundary conditions. Should accept 4
     arguments, state, a list of coordinates, the current dimension, and the
     number of ghost cells.
+    user_source_func: user-defined source terms
     restore_index: dump number to restore from. Defaults to -1, in which
     case a simulation will start from initial conditions.
     '''
@@ -30,11 +45,12 @@ def simulation(configuration_file, initial_conditions, boundary_conditions,
     rank = comm.Get_rank()
 
     # Read from ini file. Rank 0 reads, then broadcasts to everyone.
-    config = []
-    if rank == 0:
-        config = configparser.ConfigParser()
-        config.read(configuration_file)
-    config = comm.bcast(config, root=0)
+    config = read_config_file(configuration_file)
+    #config = []
+    #if rank == 0:
+    #    config = configparser.ConfigParser()
+    #    config.read(configuration_file)
+    #config = comm.bcast(config, root=0)
 
     # Spatial coordinate list
     coords, pos, global_dims, periodic_flags = create_coordinates(config)
@@ -77,7 +93,7 @@ def simulation(configuration_file, initial_conditions, boundary_conditions,
 
         # Evolve until next dump
         state = timeloop(state, coords, t, t_stop, cfl, n_ghost,
-                         boundary_conditions, cpu_grid, safety_factor, periodic_flags)
+                         boundary_conditions, cpu_grid, safety_factor, periodic_flags, user_source_func)
         t = t_stop
 
         # Remap

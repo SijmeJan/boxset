@@ -1,21 +1,18 @@
 import numpy as np
-from numba import jit
+from numba import jit_module
 
-from .reconstruction.weno_ao_53 import calc_interface_flux, weno_r
-from .conservation_laws.adi_sbox import max_wave_speed, \
+from .reconstruction.cweno_3rd import calc_interface_flux, weno_r
+from .conservation_laws.iso_2d_dust import max_wave_speed, \
     multiply_with_left_eigenvectors, multiply_with_right_eigenvectors, \
     flux_from_state, allowed_state, source_func
 from .domain_decomposition import send_boundaries
+from .utils.utils import my_swapaxes
 
-
-@jit
 def my_atleast_1d(x):
     if isinstance(x, float):
         return np.array([x])
     return np.atleast_1d(x)
 
-
-@jit
 def min(arr):
     minval = arr.flatten()[0]
     for e in arr.flatten():
@@ -23,8 +20,6 @@ def min(arr):
             minval = e
     return minval
 
-
-@jit
 def calc_time_step(state, coords, time, n_ghost, boundary_conditions):
     '''Calculate allowed time step based on maximum wave speeds'''
     dt = 1.0e10
@@ -40,8 +35,6 @@ def calc_time_step(state, coords, time, n_ghost, boundary_conditions):
 
     return dt
 
-
-@jit
 def split_flux(state, a, flux):
     '''
     Lax-Friedrichs flux splitting based on state, flux, and wave speed a.
@@ -55,8 +48,6 @@ def split_flux(state, a, flux):
         ret[..., i] = flux[..., i] + a*state[..., i]
     return ret
 
-
-@jit
 def total_interface_flux(Fplus, Fmin):
     '''Add positive and negative contributions of the flux.'''
 
@@ -64,8 +55,6 @@ def total_interface_flux(Fplus, Fmin):
                 calc_interface_flux(Fmin, weno_r-1, epsilon=1.0e-12)), \
         0.5*(Fplus[..., weno_r-1] + Fmin[..., weno_r-1])
 
-
-@jit
 def calculate_interface_flux(U, centre_flux, a, time, dim):
     '''Calculate interface fluxes in one particular direction.
     This is where the bulk of the computational time is spent, usually.
@@ -105,8 +94,6 @@ def calculate_interface_flux(U, centre_flux, a, time, dim):
 
     return interface_flux, interface_flux_safe
 
-
-@jit
 def add_to_rhs(rhs, U, coords, time, dim, n_ghost, dt_safe):
     dx = coords[dim][1] - coords[dim][0]
 
@@ -150,9 +137,8 @@ def add_to_rhs(rhs, U, coords, time, dim, n_ghost, dt_safe):
 
     return rhs
 
-
 def calculate_rhs(state, coords, time, n_ghost, boundary_conditions,
-                  cpu_grid, dt_safe, periodic_flags):
+                  cpu_grid, dt_safe, periodic_flags, user_source_func):
     '''
     Calculate the right-hand side for the method of lines,
     based on state and coordinates.
@@ -170,6 +156,7 @@ def calculate_rhs(state, coords, time, n_ghost, boundary_conditions,
     dt_safe: if U + dt_safe*rhs results in an unphysical state, use more
     diffusive flux.
     periodic_flags: flag whether dimensions are periodic
+    user_source_func: user-defined source term function
 
     Returns:
 
@@ -188,15 +175,17 @@ def calculate_rhs(state, coords, time, n_ghost, boundary_conditions,
         state = send_boundaries(state, cpu_grid, dim, n_ghost, periodic_flags[dim])
 
         # Swap dimension so that state shape is (n_state, dim1, dim2, ..., dim)
-        state = np.swapaxes(state, dim+1, len(coords))
-        rhs = np.swapaxes(rhs, dim+1, len(coords))
+        state = my_swapaxes(state, dim+1, len(coords))
+        rhs = my_swapaxes(rhs, dim+1, len(coords))
 
         # Add contribution from this dimension to rhs
         rhs = add_to_rhs(rhs, state, coords, time, dim, n_ghost, dt_safe)
 
         # Swap back to original shape
-        state = np.swapaxes(state, dim+1, len(coords))
-        rhs = np.swapaxes(rhs, dim+1, len(coords))
+        state = my_swapaxes(state, dim+1, len(coords))
+        rhs = my_swapaxes(rhs, dim+1, len(coords))
 
-    # Add source term
-    return rhs + source_func(state, coords, time)
+    # Add source terms
+    return rhs + user_source_func(state, coords, time) + source_func(state, coords, time)
+
+jit_module(nopython=True, error_model="numpy")

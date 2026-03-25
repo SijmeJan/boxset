@@ -2,6 +2,7 @@ import numpy as np
 from mpi4py import MPI
 
 from ..domain_decomposition import send_boundaries
+from ..rhs import my_swapaxes
 
 
 def remap(state, coords, time_shift, cpu_grid, n_ghost, periodic_flags):
