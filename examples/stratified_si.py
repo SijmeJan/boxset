@@ -126,8 +126,15 @@ def visualise(ini_file, save_index):
 
 
 from boxset.simulation import simulation
+import sys
 
-#simulation("/Users/sjp/Desktop/boxset/stratified_si.ini", initial_conditions, set_boundary, user_source_func, restore_index=-1)
-#simulation("/home/sijmejanpaarde/streaming_instability.ini", initial_conditions, set_boundary, restore_index=-1)
+ini_file = sys.argv[-1]
+if len(sys.argv) > 1:
+    index = int(sys.argv[-2])
+else:
+    index = -1
 
-visualise("/Users/sjp/Desktop/boxset/stratified_si.ini", 62)
+simulation(ini_file, initial_conditions, set_boundary,
+           user_source_func, restore_index=index)
+
+#visualise(ini_file, 4)
