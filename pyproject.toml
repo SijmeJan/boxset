@@ -19,7 +19,10 @@ license = "MIT"
 license-files = ["LICENCSE"]
 dependencies = [
   "numpy>=2.2.6",
+  "llvmlite==0.44.0",
   "numba>=0.61.2",
+  "numba-mpi>=1.1.8",
+  "mpi4py>=4.1.0",
   "configparser>=7.2.0",
 ]
 

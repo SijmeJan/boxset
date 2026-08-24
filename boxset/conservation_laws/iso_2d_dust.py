@@ -173,15 +173,15 @@ def source_func(U, coords, time):
 
     ret[1] = 2*pressure_parameter*U[0] + 2*U[2] + (U[5] - mu*U[1])/stokes
     ret[2] = -0.5*U[1] + (U[6] - mu*U[2])/stokes
-    #ret[3] = (U[7] - mu*U[3])/stokes
+    ret[3] = (U[7] - mu*U[3])/stokes
 
     ret[5] = 2*U[6] - (U[5] - mu*U[1])/stokes
     ret[6] = -0.5*U[5] - (U[6] - mu*U[2])/stokes
-    #ret[7] = -(U[7] - mu*U[3])/stokes
+    ret[7] = -(U[7] - mu*U[3])/stokes
 
     for i in range(0, len(z)):
-        ret[3, ..., i] = (U[7, ..., i] - mu[...,i]*U[3, ..., i])/stokes - U[0, ..., i]*z[i]
-        ret[7, ..., i] = -(U[7, ..., i] - mu[...,i]*U[3, ..., i])/stokes - U[4, ..., i]*z[i]
+        ret[3, ..., i] -= U[0, ..., i]*z[i]
+        ret[7, ..., i] -= U[4, ..., i]*z[i]
 
     return ret
 
